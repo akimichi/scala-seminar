@@ -6,7 +6,7 @@ import org.scalatest.{ FunSpec, BeforeAndAfterAll, BeforeAndAfterEach }
 
 import scala_seminar._
 
-class SeminarSpec extends FunSpec with ShouldMatchers with BeforeAndAfterAll with helpers {
+class Chapter01Spec extends FunSpec with ShouldMatchers with helpers {
   describe("Introduction"){
     describe("Futureによる非同期並列実行"){
       import akka.actor._
