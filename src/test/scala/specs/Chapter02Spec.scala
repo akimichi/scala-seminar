@@ -29,7 +29,7 @@ class Chapter02Spec extends FunSpec with ShouldMatchers with helpers {
         val s = if (x > 0) 1 else -1
         s.isInstanceOf[Int] should equal(true)
       }
-      it("演習: 次のif式はどのような型を持つ"){
+      it("演習: 次のif式はどのような型を持つか"){
         val x = "a string"
         val s = if (x.length > 0)
                   x.length
@@ -38,7 +38,14 @@ class Chapter02Spec extends FunSpec with ShouldMatchers with helpers {
         s.isInstanceOf[Any] should equal(true)
       }
     }
-    
+    describe("Sec 2.2"){
+      it("多くの場合にセミコロンは省略できる。文の区切り"){
+      }
+    }    
+    describe("Sec 2.3"){
+      it("多くの場合にセミコロンは省略できる。文の区切り"){
+      }
+    }    
   }
 }
 
