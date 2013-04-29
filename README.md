@@ -11,7 +11,7 @@ scala-seminar
    http://typesafe.com/stack/download 
    1. Macの場合
 
-      > brew installs Scala sbt maven giter8
+      > $ brew install scala sbt maven giter8
    1. Ubuntu/Debian の場合
 
       > $ apt-get update
@@ -19,9 +19,9 @@ scala-seminar
       > $ apt-get install typesafe-stack
 2. github からの本レポジトリのクローン
 
-   > git clone https://github.com/akimichi/scala-seminar.git
+   > $ git clone https://github.com/akimichi/scala-seminar.git
 
-   > cd scala-seminar
+   > $ cd scala-seminar
 
 sbtの使い方
 ---------
