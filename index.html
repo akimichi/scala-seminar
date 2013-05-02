@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="viewport" content="width=640" />
+
+    <link rel="stylesheet" href="stylesheets/core.css" media="screen"/>
+    <link rel="stylesheet" href="stylesheets/mobile.css" media="handheld, only screen and (max-device-width:640px)"/>
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css"/>
+
+    <script type="text/javascript" src="javascripts/modernizr.js"></script>
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script type="text/javascript" src="javascripts/headsmart.min.js"></script>
+    <script type="text/javascript">
+      $(document).ready(function () {
+        $('#main_content').headsmart()
+      })
+    </script>
+    <title>Scala-seminar by akimichi</title>
+  </head>
+
+  <body>
+    <a id="forkme_banner" href="https://github.com/akimichi/scala-seminar">View on GitHub</a>
+    <div class="shell">
+
+      <header>
+        <span class="ribbon-outer">
+          <span class="ribbon-inner">
+            <h1>Scala-seminar</h1>
+            <h2></h2>
+          </span>
+          <span class="left-tail"></span>
+          <span class="right-tail"></span>
+        </span>
+      </header>
+
+      <section id="downloads">
+        <span class="inner">
+          <a href="https://github.com/akimichi/scala-seminar/zipball/master" class="zip"><em>download</em> .ZIP</a><a href="https://github.com/akimichi/scala-seminar/tarball/master" class="tgz"><em>download</em> .TGZ</a>
+        </span>
+      </section>
+
+
+      <span class="banner-fix"></span>
+
+
+      <section id="main_content">
+        <h1>scala-seminar</h1>
+
+<h2>環境の導入</h2>
+
+<p>このセミナーでは、typesafe stack で提供されている scala と sbt を利用する。
+そこでまずは、typesafe stack をそれぞれの環境にインストールする必要がある。</p>
+
+<ol>
+<li>
+<p>typesafe stack のインストール
+<a href="http://typesafe.com/stack/download">http://typesafe.com/stack/download</a> </p>
+
+<ol>
+<li>
+<p>Macの場合</p>
+
+<blockquote>
+<p>$ brew install scala sbt maven giter8</p>
+</blockquote>
+</li>
+<li>
+<p>Ubuntu/Debian の場合</p>
+
+<blockquote>
+<p>$ apt-get update</p>
+
+<p>$ apt-get install typesafe-stack</p>
+</blockquote>
+</li>
+</ol>
+</li>
+<li>
+<p>github からの本レポジトリのクローン</p>
+
+<blockquote>
+<p>$ git clone <a href="https://github.com/akimichi/scala-seminar.git">https://github.com/akimichi/scala-seminar.git</a></p>
+
+<p>$ cd scala-seminar</p>
+</blockquote>
+</li>
+</ol><h2>sbtの使い方</h2>
+
+<p>セミナーで使うコマンドは、以下の2,3個にすぎない。</p>
+
+<p>テストを実行する。</p>
+
+<blockquote>
+<p>sbt test</p>
+</blockquote>
+
+<p>REPLを起動する。</p>
+
+<blockquote>
+<p>sbt console</p>
+</blockquote>
+      </section>
+
+      <footer>
+        <span class="ribbon-outer">
+          <span class="ribbon-inner">
+            <p>this project by <a href="https://github.com/akimichi">akimichi</a> can be found on <a href="https://github.com/akimichi/scala-seminar">GitHub</a></p>
+          </span>
+          <span class="left-tail"></span>
+          <span class="right-tail"></span>
+        </span>
+        <p>Generated with <a href="http://pages.github.com">GitHub Pages</a> using Merlot</p>
+        <span class="octocat"></span>
+      </footer>
+
+    </div>
+
+    
+  </body>
+</html>
