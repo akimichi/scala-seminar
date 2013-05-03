@@ -54,6 +54,23 @@ class Chapter02Spec extends FunSpec with ShouldMatchers with helpers {
       it("標準出力に出力する"){ pending }
       it("標準入力から入力する"){ pending }
       info("副作用を持つメソッドはテストが難しい")
+      it("副作用を持つメソッドをmockでテストする"){
+        trait Output {
+          def println(s: String) = Console.println(s)
+        }
+        trait MockOutput extends Output {
+          var messages: Seq[String] = Seq()
+          override def println(s: String) = messages = messages :+ s
+        }
+        object mock extends MockOutput {
+          def print(){
+            println("Answer: " + 42)
+          }
+        }
+        mock.print()
+        mock.messages should contain("Answer: 42")
+      }
+
     }
     describe("Sec 2.5"){
       it("forでループする"){}
@@ -105,16 +122,25 @@ class Chapter02Spec extends FunSpec with ShouldMatchers with helpers {
       it("yieldでmapと同様の処理が可能である"){
         val result = for(i <- 1 to 10) yield i % 3
         result should equal(Seq(1, 2, 0, 1, 2, 0, 1, 2, 0, 1))
+
+        (1 to 10) map{ i =>
+          i % 3
+        } should equal(Seq(1, 2, 0, 1, 2, 0, 1, 2, 0, 1))
       }
     }
     describe("Sec 2.7"){
       import scala.math.BigInt
-      it("再帰関数の定義には、返値の指定が必須である"){
+      it("再帰関数による factorial の実装"){
+        info("再帰関数の定義には、返値の指定が必須である")
+        info("これは型推論がプログラムの実行時ではなくコンパイル時に、構文解析によって達成されることを端的に表わしている")
         // @annotation.tailrec
         def fac(n: BigInt): BigInt = if (n <= 0) 1 else n * fac(n - 1)
         fac(10) should equal(3628800)
         info("この再帰関数は末尾再帰になっていない点に注意")
 
+      }
+      it("末尾再帰による factorial の実装"){
+        @annotation.tailrec
         def facrec(n: BigInt, accum:BigInt): BigInt = {
           if (n <= 0)
             accum
@@ -123,7 +149,7 @@ class Chapter02Spec extends FunSpec with ShouldMatchers with helpers {
         }
         facrec(10,1) should equal(3628800)
       }
-      it("並列化する"){
+      it("factorialを並列化する"){
         object parallel {
           import akka.dispatch.{Await, ExecutionContext, Future}
           import akka.util.Timeout
