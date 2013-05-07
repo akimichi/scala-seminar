@@ -181,11 +181,18 @@ class Chapter02Spec extends FunSpec with ShouldMatchers with helpers {
       }
     }
     describe("Sec 2.8"){
+      def decorate(str: String, left: String = "[", right: String = "]") = left + str + right
       it("デフォルト引数の指定の仕方"){
-        def decorate(str: String, left: String = "[", right: String = "]") = left + str + right
+        decorate("Hello") should equal("[Hello]")
+        decorate("Hello","<<<",">>>") should equal("<<<Hello>>>")
+        decorate("Hello",">>>[") should equal(">>>[Hello]")
       }
-
-      
+      it("名前付き引数の指定の仕方"){
+        decorate(left = "<<<", str = "Hello", right = ">>>") should equal("<<<Hello>>>")
+      }
+      it("デフォルト引数と名前付き引数を同時に指定することも可能である"){
+        decorate("Hello", right = ">>>") should equal("[Hello>>>")
+      }
     }
     describe("Sec 2.9"){
       def sum(args: Int*) = {
@@ -193,19 +200,96 @@ class Chapter02Spec extends FunSpec with ShouldMatchers with helpers {
         for (arg <- args) result += arg
         result
       }
-      sum(1, 4, 9, 16, 25) should equal(55)
+      it("可変長引数の渡しかた"){
+        sum(1, 4, 9, 16, 25) should equal(55)
+      }
+      it("可変長引数にSeqをそのまま渡す方法"){
+        sum(1 to 5: _*) should equal(15)
+      }
+      it("可変長引数を用いて再帰関数を定義する場合"){
+        def recursivesum(args: Int*) : Int = {
+          if(args.length == 0 )
+            0
+          else
+            args.head + recursivesum(args.tail : _*)
+        }
+        recursivesum(1,2,3,4,5) should equal(15)
+      }
     }
-    describe("Sec 2.10"){
-      
-      
+    describe("sec 2.10"){
+      it("手続き procedure の定義の方法"){
+        def box(s:String) {
+          val border = "-" * s.length + "--\n"
+          println(border + "|" + s + "|\n" + border)
+        }
+        box("a string")
+      }
+      it("返り値を unit に指定することで手続きを定義できる"){
+        def box(s:String):Unit = {
+          val border = "-" * s.length + "--\n"
+          println(border + "|" + s + "|\n" + border)
+        }
+        info("実は unit も型であるが、空のtupleとなっている")
+        box("another string").isInstanceOf[Unit] should equal(true)
+      }
     }
-    describe("Sec 2.11"){
-      
+    describe("sec 2.11"){
+      it("変数の定義に lazy を前置すると、遅延評価される"){
+        lazy val words = scala.io.Source.fromFile("src/test/scala/specs/chapter02spec.scala").mkString
+        info("遅延評価とは、定義時ではなく、実際にアクセスされる時点まで評価されない仕組みのこと")
+      }
+      info("lazy val は、循環定義の解決に不可欠である")
+      it("lazy val は、無限ストリームなどの遅延型データ構造の構築に有効である") {
+        lazy val fib: Stream[BigInt] = Stream.cons(0,
+	                                               Stream.cons(1, fib.zip(fib.tail).map(p => p._1 + p._2)))
+        fib.take(3).foldLeft(BigInt(0)){ (accum, item) =>
+          accum + item
+        } should equal(2)
+      }
     }
-    describe("Sec 2.12"){
-      
+    describe("sec 2.12"){
+     info("scalaは,javaの検査例外 checked exception を実装していない")
+     it("throwは、Nothing型を返す式 expression である"){
+       val if_expression = { x:Int => 
+         if(x>=0)
+           scala.math.sqrt(x)
+         else
+           throw new IllegalArgumentException("x should not be negative")
+       }
+       if_expression should be (anInstanceOf[Nothing])
+       info("Nothing型はScalaのクラス階層において全ての型のサブタイプになる(src/test/resources/scala_class_hierachy.jpgを参照)")
+     }
+     it("例外を捕捉する場合は、catch文のなかでパターンマッチをおこなう"){
+       import java.net.{URL,MalformedURLException}
+       import java.io.IOException
+       val url = new URL("http://horstmann.com/fred-tiny.gif")
+       try {
+         scala.io.Source.fromURL(url,"UTF-8").mkString
+       } catch {
+         case _: MalformedURLException => println("Bad URL: " + url)
+         case ex:IOException => ex.printStackTrace()
+       }
+     }
+     it("try/finallyでリソースの解放を処理できる"){
+       import java.net.URL
+       import java.io.InputStream
+       val url = new URL("http://www.google.co.jp")
+       val in = url.openStream()
+       try {
+         scala.io.Source.fromInputStream(in)
+       } finally {
+         in.close()
+       }
+       
+     }
+     it("tryとcatchは値を返すが、finallyは値を返さない") {
+     }
+     it("finallyで例外が発生すると、その例外がスローされる"){
+     }
+     it("Tryを用いた関数的な例外処理"){
+       info("http://danielwestheide.com/blog/2012/12/26/the-neophytes-guide-to-scala-part-6-error-handling-with-try.html")
+     }
     }
-
   }
 }
 
