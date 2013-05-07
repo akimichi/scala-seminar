@@ -188,9 +188,15 @@ class Chapter02Spec extends FunSpec with ShouldMatchers with helpers {
       
     }
     describe("Sec 2.9"){
-      
+      def sum(args: Int*) = {
+        var result = 0
+        for (arg <- args) result += arg
+        result
+      }
+      sum(1, 4, 9, 16, 25) should equal(55)
     }
     describe("Sec 2.10"){
+      
       
     }
     describe("Sec 2.11"){
