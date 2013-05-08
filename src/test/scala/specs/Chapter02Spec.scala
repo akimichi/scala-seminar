@@ -51,9 +51,21 @@ class Chapter02Spec extends FunSpec with ShouldMatchers with helpers {
       }
     }    
     describe("Sec 2.4"){
-      it("標準出力に出力する"){ pending }
-      it("標準入力から入力する"){ pending }
-      info("副作用を持つメソッドはテストが難しい")
+      it("標準出力に出力する"){
+        print("Answer: ")
+        println(42)
+
+        printf("Hello, %s! You are %d years old.\n", "Fred",42)
+      }
+      /*
+      it("標準入力から入力する"){
+        val name = readLine("Your name: ")
+        print("Your age: ")
+        val age = readInt()
+        printf("Hello, %s! Next year, you will be %d.\n", name, age + 1)
+      }
+      */
+      info("以上の例から明らかなように、副作用を持つメソッドはテストが難しい")
       it("副作用を持つメソッドをmockでテストする"){
         trait Output {
           def println(s: String) = Console.println(s)
@@ -73,7 +85,49 @@ class Chapter02Spec extends FunSpec with ShouldMatchers with helpers {
 
     }
     describe("Sec 2.5"){
-      it("forでループする"){}
+      it("whileでループする"){
+        var n = 10
+        var r = 0
+        while ( n > 0 ) {
+          r = r * n
+          n -= 1
+        }
+        n should equal(0)
+      }
+      it("forでループする"){
+        val n = 10
+        var r = 1
+        for( i <- 1 to n) {
+          r = r * i
+        }
+        r should equal(3628800)
+      }
+      it("untilを使う"){
+        val s = "Hello"
+        var sum = 0
+        for( i <- 0 until s.length) {
+          sum += s(i)
+        }
+        sum should equal(500)
+      }
+      it("foreachを持つコレクションはfor式のなかでジェレネータとして指定できる"){
+        val s = "Hello"
+        var sum = 0
+        for( char <- s) {
+          sum += char
+        }
+        sum should equal(500)
+
+        {
+          var sum = 0
+          s.foreach{char =>
+            sum += char
+          }
+          sum should equal(500)
+        }
+
+      }
+      
       it("breakは標準では提供されていない"){}
       it("breakableでloopを抜ける"){
         import scala.util.control.Breaks
@@ -238,7 +292,11 @@ class Chapter02Spec extends FunSpec with ShouldMatchers with helpers {
         lazy val words = scala.io.Source.fromFile("src/test/scala/specs/chapter02spec.scala").mkString
         info("遅延評価とは、定義時ではなく、実際にアクセスされる時点まで評価されない仕組みのこと")
       }
-      info("lazy val は、循環定義の解決に不可欠である")
+      info("lazy val は、循環参照の解決に不可欠である")
+      it("循環参照の例"){
+        lazy val a:Int = b + 1
+        lazy val b:Int = a + 1
+      }
       it("lazy val は、無限ストリームなどの遅延型データ構造の構築に有効である") {
         lazy val fib: Stream[BigInt] = Stream.cons(0,
 	                                               Stream.cons(1, fib.zip(fib.tail).map(p => p._1 + p._2)))
@@ -249,6 +307,8 @@ class Chapter02Spec extends FunSpec with ShouldMatchers with helpers {
     }
     describe("sec 2.12"){
      info("scalaは,javaの検査例外 checked exception を実装していない")
+     info("ただし、@throwsアノテーションを使えば検査例外を要求できる")
+      
      it("throwは、Nothing型を返す式 expression である"){
        val if_expression = { x:Int => 
          if(x>=0)
@@ -262,11 +322,12 @@ class Chapter02Spec extends FunSpec with ShouldMatchers with helpers {
      it("例外を捕捉する場合は、catch文のなかでパターンマッチをおこなう"){
        import java.net.{URL,MalformedURLException}
        import java.io.IOException
-       val url = new URL("http://horstmann.com/fred-tiny.gif")
+       val path = "http://horstmann.com/fred-tiny.gif"
        try {
+         val url = new URL(path)
          scala.io.Source.fromURL(url,"UTF-8").mkString
        } catch {
-         case _: MalformedURLException => println("Bad URL: " + url)
+         case _: MalformedURLException => println("Bad URL: " + path)
          case ex:IOException => ex.printStackTrace()
        }
      }
@@ -282,9 +343,23 @@ class Chapter02Spec extends FunSpec with ShouldMatchers with helpers {
        }
        
      }
-     it("tryとcatchは値を返すが、finallyは値を返さない") {
+     it("tryとcatchは値を返す") {
+       import java.net.{URL,MalformedURLException}
+       import java.io.IOException
+       val path = "https://github.com/akimichi/scala-seminar"
+       
+       val content:String = try {
+         val url = new URL(path)
+         scala.io.Source.fromURL(url,"UTF-8").mkString
+       } catch {
+         case _: MalformedURLException => ""
+         case ex:IOException => ""
+       }
+       content.length should not equal(0)
+       info("ちなみに、finallyは値を返さない")
      }
      it("finallyで例外が発生すると、その例外がスローされる"){
+       
      }
      it("Tryを用いた関数的な例外処理"){
        info("http://danielwestheide.com/blog/2012/12/26/the-neophytes-guide-to-scala-part-6-error-handling-with-try.html")
