@@ -10,18 +10,30 @@ class Chapter02Spec extends FunSpec with ShouldMatchers with helpers {
   describe("Chap 2."){
     info("本章では、副作用をもたない式 expression と副作用を持つ文 statement について")
     describe("Sec 2.1"){
-      it("条件構造の if も式 expression である"){
-        info("式 expression とは評価されると値を返すものであり、一方で文 statement とは値を返さずに副作用を生じるものである")
-        var x = 0
-        val s = if (x > 0) 1 else -1
-        s should equal(-1)
-        info("返り値を捨てれば文のように作用するが、好ましいスタイルではない")
-        if (x > 0) {
-          x = x
+      info("式 expression とは評価されると値を返すものであり、一方で文 statement とは値を返さずに副作用を生じるものである")
+      describe("scalaでは、条件構造の if も式 expression である"){
+        it("if式は値を返す"){
+          var x = -10
+          val absolute_x = if (x > 0) {
+            x
+          } else {
+            - x
+          }
+          absolute_x should equal(10)
+        }
+        it("返り値を捨てれば文のように作用するが、状態変数を使うため好ましいスタイルではない"){
+          var x = -10
+          if (x > 0) {
+            x = x
+          } else {
+            x = - x
+          }
           x should be >= 0
-        } else {
-          x = - x
-          x should be >= 0
+          /*
+           * 
+           */
+          x = -100
+          x should be < 0
         }
       }
       it("したがってif式も型 type を持つ"){
@@ -41,13 +53,32 @@ class Chapter02Spec extends FunSpec with ShouldMatchers with helpers {
       }
     }
     describe("Sec 2.2"){
-      it("多くの場合にセミコロンは省略できる。文の区切り"){
-        pending
+      it("多くの場合にセミコロンは省略できる"){
+        info("セミコロンは、文の区切りに利用されることが多い")
+        var (r,n) = (1,1)
+        if (n > 0) { r = r * n; n -= 1 }
+        n should equal(0)
+        info("ただし、セミコロンを使わない以下のスタイルのほうが読みやすい")
+        if (n > 0) {
+          r = r * n
+          n -= 1
+        }
+        info("rは可変な状態変数なのでどのような値を持つかがわかりにくい")
+        r should equal(1)
       }
     }    
     describe("Sec 2.3"){
+      info("scalaではブロック構文も式であり、最後の式の値が全体のブロックの値となる")
       it("ブロック内で複数の式を逐次実行する"){
-        pending
+        val (x0,y0) = (0,0)
+        val (x,y) = (3,4)
+        val distance = {
+          val dx = x - x0
+          val dy = y - y0
+          scala.math.sqrt(dx * dx + dy * dy)
+        }
+        distance should equal(5.0)
+        info("この手法は、われわれのプロジェクトコード内では、テストフィクスチャーの作成などで多用されている")
       }
     }    
     describe("Sec 2.4"){
@@ -127,44 +158,45 @@ class Chapter02Spec extends FunSpec with ShouldMatchers with helpers {
         }
 
       }
-      
-      it("breakは標準では提供されていない"){}
-      it("breakableでloopを抜ける"){
-        import scala.util.control.Breaks
-        
-        val breaks = new Breaks()
-        import breaks.{break,breakable}
-        var sum = 0
-        breakable {
-          for(i <- 1 to 100) {
-            sum = sum + i
-            if(i >= 6)
-              break
+      info("breakは標準では提供されていない")
+      describe("breakの効果を実現する"){
+        it("breakableでloopを抜ける"){
+          import scala.util.control.Breaks
+          
+          val breaks = new Breaks()
+          import breaks.{break,breakable}
+          var sum = 0
+          breakable {
+            for(i <- 1 to 100) {
+              sum = sum + i
+              if(i >= 6)
+                break
+            }
           }
+          sum should equal(21)
         }
-        sum should equal(21)
-      }
-      it("再帰でbreak同等を実現する"){
-        val upto = 6
-        @annotation.tailrec
-        def loop(range:Range,accumulator:Int):Int = {
-          val head = range.head
-          if(head > upto)
-            accumulator
-          else
-            loop(range.tail, accumulator + range.head)
+        it("再帰でbreak同等を実現する"){
+          val upto = 6
+          @annotation.tailrec
+          def loop(range:Range,accumulator:Int):Int = {
+            val head = range.head
+            if(head > upto)
+              accumulator
+            else
+              loop(range.tail, accumulator + range.head)
+          }
+          val range:Range = 1 to 100
+          loop(range, 0) should equal(21)
+          info("この再帰の例は下記の高階関数と比べると冗長だが、引数で accumulator を利用するテクニックは「状態」を保持する方法として重要である")
+          info("上記の再帰関数は末尾再帰となっている点に注意")
         }
-        val range:Range = 1 to 100
-        loop(range, 0) should equal(21)
-        info("この再帰の例は下記の高階関数と比べると冗長だが、引数で accumulator を利用するテクニックは「状態」を保持する方法として重要である")
-        info("上記の再帰関数は末尾再帰となっている点に注意")
-      }
-      it("高階関数で同様の機能を実現する"){
-        val range = 1 to 100
-        val upto = 6
-        range.take(upto).foldLeft(0){ (accum, item) =>
-          accum + item
-        } should equal(21)
+        it("高階関数で同様の機能を実現する"){
+          val range = 1 to 100
+          val upto = 6
+          range.take(upto).foldLeft(0){ (accum, item) =>
+            accum + item
+          } should equal(21)
+        }
       }
     }
     describe("Sec 2.6"){
@@ -191,7 +223,6 @@ class Chapter02Spec extends FunSpec with ShouldMatchers with helpers {
         def fac(n: BigInt): BigInt = if (n <= 0) 1 else n * fac(n - 1)
         fac(10) should equal(3628800)
         info("この再帰関数は末尾再帰になっていない点に注意")
-
       }
       it("末尾再帰による factorial の実装"){
         @annotation.tailrec
@@ -219,7 +250,7 @@ class Chapter02Spec extends FunSpec with ShouldMatchers with helpers {
             else
               facrec(n - 1, downto, n * accum)
           }
-          def facrec_par():BigInt = {
+          def factorial_par():BigInt = {
             val listOfFutures:List[Future[BigInt]] = List(Future{facrec(6000,5000,1)}.mapTo[BigInt],
                                                           Future{facrec(5000,4000,1)}.mapTo[BigInt],
                                                           Future{facrec(4000,3000,1)}.mapTo[BigInt],
@@ -231,7 +262,7 @@ class Chapter02Spec extends FunSpec with ShouldMatchers with helpers {
           }
         }
         import parallel._
-        facrec_par() should equal(facrec(6000,0,1) )
+        factorial_par() should equal(facrec(6000,0,1) )
       }
     }
     describe("Sec 2.8"){
@@ -361,9 +392,9 @@ class Chapter02Spec extends FunSpec with ShouldMatchers with helpers {
      it("finallyで例外が発生すると、その例外がスローされる"){
        
      }
-     it("Tryを用いた関数的な例外処理"){
-       info("http://danielwestheide.com/blog/2012/12/26/the-neophytes-guide-to-scala-part-6-error-handling-with-try.html")
-     }
+     // it("Tryを用いた関数的な例外処理"){
+     //   info("http://danielwestheide.com/blog/2012/12/26/the-neophytes-guide-to-scala-part-6-error-handling-with-try.html")
+     // }
     }
   }
 }
