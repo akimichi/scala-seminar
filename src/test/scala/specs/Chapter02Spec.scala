@@ -142,24 +142,23 @@ class Chapter02Spec extends FunSpec with ShouldMatchers with helpers {
         sum should equal(500)
       }
       it("foreachを持つコレクションはfor式のなかでジェレネータとして指定できる"){
-        val s = "Hello"
+        val list = List(1,2,3,4,5)
         var sum = 0
-        for( char <- s) {
-          sum += char
+        for( item <- list) {
+          sum += item
         }
-        sum should equal(500)
+        sum should equal(15)
 
         {
           var sum = 0
-          s.foreach{char =>
-            sum += char
+          list.foreach{item =>
+            sum += item
           }
-          sum should equal(500)
+          sum should equal(15)
         }
-
       }
       info("breakは標準では提供されていない")
-      describe("breakの効果を実現する"){
+      describe("breakの動作を実現する"){
         it("breakableでloopを抜ける"){
           import scala.util.control.Breaks
           
@@ -169,14 +168,14 @@ class Chapter02Spec extends FunSpec with ShouldMatchers with helpers {
           breakable {
             for(i <- 1 to 100) {
               sum = sum + i
-              if(i >= 6)
+              if(i >= 5)
                 break
             }
           }
-          sum should equal(21)
+          sum should equal(15)
         }
         it("再帰でbreak同等を実現する"){
-          val upto = 6
+          val upto = 5
           @annotation.tailrec
           def loop(range:Range,accumulator:Int):Int = {
             val head = range.head
@@ -186,16 +185,16 @@ class Chapter02Spec extends FunSpec with ShouldMatchers with helpers {
               loop(range.tail, accumulator + range.head)
           }
           val range:Range = 1 to 100
-          loop(range, 0) should equal(21)
+          loop(range, 0) should equal(15)
           info("この再帰の例は下記の高階関数と比べると冗長だが、引数で accumulator を利用するテクニックは「状態」を保持する方法として重要である")
           info("上記の再帰関数は末尾再帰となっている点に注意")
         }
         it("高階関数で同様の機能を実現する"){
           val range = 1 to 100
-          val upto = 6
+          val upto = 5
           range.take(upto).foldLeft(0){ (accum, item) =>
             accum + item
-          } should equal(21)
+          } should equal(15)
         }
       }
     }
@@ -314,13 +313,13 @@ class Chapter02Spec extends FunSpec with ShouldMatchers with helpers {
           val border = "-" * s.length + "--\n"
           println(border + "|" + s + "|\n" + border)
         }
-        info("実は unit も型であるが、空のtupleとなっている")
+        info("実は Unit も型であるが、空のtupleとなっている")
         box("another string").isInstanceOf[Unit] should equal(true)
       }
     }
     describe("sec 2.11"){
       it("変数の定義に lazy を前置すると、遅延評価される"){
-        lazy val words = scala.io.Source.fromFile("src/test/scala/specs/chapter02spec.scala").mkString
+        lazy val words = scala.io.Source.fromFile("src/test/scala/specs/illegal.scala").mkString
         info("遅延評価とは、定義時ではなく、実際にアクセスされる時点まで評価されない仕組みのこと")
       }
       info("lazy val は、循環参照の解決に不可欠である")
@@ -334,6 +333,34 @@ class Chapter02Spec extends FunSpec with ShouldMatchers with helpers {
         fib.take(3).foldLeft(BigInt(0)){ (accum, item) =>
           accum + item
         } should equal(2)
+      }
+      describe("コンストラクタでの lazy val の利用"){
+        it("valの値はコンストラクターで初期化されるが、親クラスのコンストラクター実行時はまだ子クラスのコンストラクターが呼ばれていないため、field が初期化されない") {
+          intercept[scala.UninitializedFieldError]{
+            class A {
+              val field = 1
+              val print_field = field.toString
+            }
+            
+            class B extends A {
+              override val field = 2
+            }
+            val b = new B
+          }
+        }
+        it("親クラスにおいて、子クラスのコンストラクタに依存するメンバー変数を lazy val と指定することで、継承時のコンストラクタの順番に関係なく適切にメンバー変数が初期化される") {
+          class A {
+            val field = 1
+            lazy val print_field = field.toString
+          }
+          
+          class B extends A {
+            override val field = 2
+          }
+          val b = new B
+          b.field should equal(2)
+          b.print_field should equal("2")
+        }
       }
     }
     describe("sec 2.12"){
