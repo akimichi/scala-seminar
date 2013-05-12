@@ -291,13 +291,13 @@ class Chapter02Spec extends FunSpec with ShouldMatchers with helpers {
         sum(1 to 5: _*) should equal(15)
       }
       it("可変長引数を用いて再帰関数を定義する場合"){
-        def recursivesum(args: Int*) : Int = {
+        def sumrec(args: Int*) : Int = {
           if(args.length == 0 )
             0
           else
-            args.head + recursivesum(args.tail : _*)
+            args.head + sumrec(args.tail : _*)
         }
-        recursivesum(1,2,3,4,5) should equal(15)
+        sumrec(1,2,3,4,5) should equal(15)
       }
     }
     describe("sec 2.10"){
@@ -417,7 +417,10 @@ class Chapter02Spec extends FunSpec with ShouldMatchers with helpers {
        info("ちなみに、finallyは値を返さない")
      }
      it("finallyで例外が発生すると、その例外がスローされる"){
-       
+       pending
+     }
+     it("loan pattern によるリソース管理"){
+       pending
      }
      // it("Tryを用いた関数的な例外処理"){
      //   info("http://danielwestheide.com/blog/2012/12/26/the-neophytes-guide-to-scala-part-6-error-handling-with-try.html")
