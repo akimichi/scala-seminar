@@ -25,7 +25,7 @@ trait helpers {
        acc
      }
    }
-
+   /*
    object mongodb {
      import com.mongodb.casbah.Imports._
     import com.mongodb.{CommandResult}
@@ -54,5 +54,6 @@ trait helpers {
       }
     }
   }
+  */ 
   
 }
