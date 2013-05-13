@@ -39,5 +39,9 @@ scala-seminar のディレクトリにて、activator を起動する。
 testを実行する。
 
    > scala-seminar>  test
+
+REPLを実行する。
+
+   > scala-seminar>  console
   
 
