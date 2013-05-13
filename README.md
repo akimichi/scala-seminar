@@ -7,29 +7,37 @@ scala-seminar
 このセミナーでは、typesafe stack で提供されている scala と sbt を利用する。
 そこでまずは、typesafe stack をそれぞれの環境にインストールする必要がある。
 
-1. typesafe stack のインストール
-   http://typesafe.com/stack/download 
-   1. Macの場合
+1. typesafe stack activator のインストール
+   http://typesafe.com/platform/getstarted から typesafe activator をダウンロードする。
 
-      > $ brew install scala sbt maven giter8
-   1. Ubuntu/Debian の場合
+   > $ wget http://downloads.typesafe.com/typesafe-activator/{VERSION}/typesafe-activator-{VERSION}.zip
 
-      > $ apt-get update
+   現時点では、VERSION は 0.1.1 なので、以下のコマンドでダウンロードできる。
 
-      > $ apt-get install typesafe-stack
+   > $ wget http://downloads.typesafe.com/typesafe-activator/{VERSION}/typesafe-activator-0.1.1.zip
+   
+   > $ unzip typesafe-activator-{VERSION}.zip
+
+   > $ cd activator-{VERSION}
+
+   > $ ./activator ui
+
 2. github からの本レポジトリのクローン
 
    > $ git clone https://github.com/akimichi/scala-seminar.git
 
    > $ cd scala-seminar
 
-sbtの使い方
+activatorの使い方
 ---------
 セミナーで使うコマンドは、以下の2,3個にすぎない。
 
-テストを実行する。
-> sbt test
+scala-seminar のディレクトリにて、activator を起動する。
 
-REPLを起動する。
-> sbt console
+   > $ ./activator
+
+testを実行する。
+
+   > scala-seminar>  test
+  
 
