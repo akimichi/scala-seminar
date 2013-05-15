@@ -17,7 +17,6 @@ class Chapter03Spec extends FunSpec with ShouldMatchers with helpers {
       }
     }
     info("マルチスレッドで動作する場合は、immutable なListやVectorを使うべき")
-    info("ランダムアクセスが必要な場合は、Listではなく、Vectorを使うべき")
     info("src/test/resources/scala_collection_hierachy.png")
     describe("sec 3.4"){
       val a = List(2,3,5,7,11)
@@ -61,7 +60,7 @@ class Chapter03Spec extends FunSpec with ShouldMatchers with helpers {
         val list1 = List(1,2,3)
         val list2 = List("1","2","3")
         val zipped = list1.zip(list2)
-        zipped(0) should equal((1,"1"))
+        zipped should equal(List((1,"1"), (2,"2"), (3,"3")))
       }
       it("zip と drop で隣りあわせの要素のペアを持つリストを作る") {
         val list = List(1,2,3,4,5,6,7,8,9,10)
@@ -71,6 +70,7 @@ class Chapter03Spec extends FunSpec with ShouldMatchers with helpers {
       it("List#findメソッドはリストを検索して条件に合致する最初の要素を返す") {
         val list = List(1,2,3,4,5,6,7,8,9,10)
         list.find(_ % 2 == 0) should equal(Some(2))
+        list.find(_ > 10) should equal(None)
       }
       it("List#containsメソッドはリストに該当する要素があるかどうかを返す") {
         val list = List(1,2,3,4,5,6,7,8,9,10)
@@ -81,12 +81,24 @@ class Chapter03Spec extends FunSpec with ShouldMatchers with helpers {
         list.filter(_ % 2 == 0) should equal(List(2, 4, 6, 8, 10))
       }
       it("List#existsメソッドはリストを検索して条件に合致する最初の要素があるかどうかを調べる") {
-        val list = List("foo","bar","gus")
+        val list = List("foo","bar","bazz")
         list.exists(_.startsWith("f")) should equal(true)
       }
       it("List#forallメソッドはリストを検索して全ての要素が条件に合致するかどうかを調べる") {
         val list = List("foo","bar","gus")
         list.forall(_.length == 3) should equal(true)
+      }
+      it("List#distictで一意の要素のみに変換する") {
+        List(1,2,3,2,1).distinct should equal(List(1, 2, 3))
+        (List(3,2,1,2,3) ::: List(2,3,1,3,1)).distinct should equal(List(3, 2, 1))
+      }
+      it("List#collectメソッドでListの一部の要素のみを置換する"){
+        val list = List(1,2,3)
+        val new_list = list.collect {
+          case i if i == 2 => 0
+          case j => j
+        }
+        new_list should equal(List(1,0,3))
       }
       describe("Listをmatchする") {
         it("Listについて、個数を指定して match させる"){
@@ -119,32 +131,24 @@ class Chapter03Spec extends FunSpec with ShouldMatchers with helpers {
           }
         }
       }
-      it("List#distictで一意の要素のみに変換する") {
-        List(1,2,3,2,1).distinct should equal(List(1, 2, 3))
-        (List(3,2,1,2,3) ::: List(2,3,1,3,1)).distinct should equal(List(3, 2, 1))
-      }
-      it("List#collectメソッドでListの一部の要素のみを置換する"){
-        val list = List(1,2,3)
-        val new_list = list.collect {
-          case i if i == 2 => 0
-          case j => j
-        }
-        new_list should equal(List(1,0,3))
-      }
     }
     describe("ListとVectorの性能比較"){
       info("List has O(1) prepend and head/tail access. Most other operations are O(n) on the number of elements in the list. This includes the index-based lookup of elements, length, append and reverse.")
       info("http://docs.scala-lang.org/overviews/collections/concrete-immutable-collection-classes.html#vectors")
       info("http://docs.scala-lang.org/ja/overviews/collections/performance-characteristics.html")
-      /*
-       * val max = 10000000
-       * val vector = Vector.range(1, max)
-       * val list = List.range(1, max)
-       * time{vector(0)}
-       * time{list(0)}
-       * time{vector.last}
-       * time{list.last}
-       */ 
+      import System.{currentTimeMillis => now}
+      def time[T](f: => T): T = {
+        val start = now
+        try { f } finally { println("Elapsed: " + (now - start)/1000.0 + " s") }
+      }
+      val max = 10000000
+      val vector = Vector.range(1, max)
+      val list = List.range(1, max)
+      time{vector(0)} should equal(1)
+      time{list(0)} should equal(1)
+      time{vector.last} should equal(9999999)
+      time{list.last} should equal(9999999)
+      info("ランダムアクセスが必要な場合は、Listではなく、Vectorを使うべき")
     }
     describe("使い分けのためのパターン"){
       it("traitの場合"){
@@ -165,6 +169,15 @@ class Chapter03Spec extends FunSpec with ShouldMatchers with helpers {
         def get[T](collection:Seq[T], index:Int):T = collection(index)
         get(List.range(1,100000),0) should equal(1)
         get(Vector.range(1,100000),99998) should equal(99999)
+        
+        def take[T](collection:Seq[T], n:Int) : Seq[T] = collection.take(n)
+        // def take(collection:Seq[_], n:Int) = collection.take(n)
+        // def take[T <: Seq[_]](collection:T, n:Int) = collection.take(n)
+        take(List.range(1,100000),2) should equal(List(1,2))
+        take(Vector.range(1,100000),2) should equal(Vector(1,2))        
+        take(Seq.range(1,100000),2) should equal(Vector(1,2))
+        take(Seq.range(1,100000),2) should equal(List(1,2))
+        take(Vector.range(1,100000),2) should equal(Seq(1,2))        
       }        
     }
   }
