@@ -124,9 +124,7 @@ class Chapter03Spec extends FunSpec with ShouldMatchers with helpers {
             case head::Nil => {
               head should equal(1)
             }
-            case head::tail => {
-              fail()
-            }
+            case head::tail => fail()
             case _ => fail()
           }
         }
@@ -169,15 +167,6 @@ class Chapter03Spec extends FunSpec with ShouldMatchers with helpers {
         def get[T](collection:Seq[T], index:Int):T = collection(index)
         get(List.range(1,100000),0) should equal(1)
         get(Vector.range(1,100000),99998) should equal(99999)
-        
-        def take[T](collection:Seq[T], n:Int) : Seq[T] = collection.take(n)
-        // def take(collection:Seq[_], n:Int) = collection.take(n)
-        // def take[T <: Seq[_]](collection:T, n:Int) = collection.take(n)
-        take(List.range(1,100000),2) should equal(List(1,2))
-        take(Vector.range(1,100000),2) should equal(Vector(1,2))        
-        take(Seq.range(1,100000),2) should equal(Vector(1,2))
-        take(Seq.range(1,100000),2) should equal(List(1,2))
-        take(Vector.range(1,100000),2) should equal(Seq(1,2))        
       }        
     }
   }

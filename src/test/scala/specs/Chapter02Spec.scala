@@ -378,15 +378,17 @@ class Chapter02Spec extends FunSpec with ShouldMatchers with helpers {
        info("Nothing型はScalaのクラス階層において全ての型のサブタイプになる(src/test/resources/scala_class_hierachy.jpgを参照)")
      }
      it("例外を捕捉する場合は、catch文のなかでパターンマッチをおこなう"){
-       import java.net.{URL,MalformedURLException}
-       import java.io.IOException
-       val path = "http://horstmann.com/fred-tiny.gif"
-       try {
-         val url = new URL(path)
-         scala.io.Source.fromURL(url,"UTF-8").mkString
-       } catch {
-         case _: MalformedURLException => println("Bad URL: " + path)
-         case ex:IOException => ex.printStackTrace()
+       intercept[java.io.FileNotFoundException]{
+         import java.net.{URL,MalformedURLException}
+         import java.io.IOException
+         val path = "http://horstmann.com/fred-tiny.gif"
+         try {
+           val url = new URL(path)
+           scala.io.Source.fromURL(url,"UTF-8").mkString
+         } catch {
+           case _: MalformedURLException => println("Bad URL: " + path)
+           case ex:IOException => throw ex // ex.printStackTrace()
+         }
        }
      }
      it("try/finallyでリソースの解放を処理できる"){
@@ -417,14 +419,32 @@ class Chapter02Spec extends FunSpec with ShouldMatchers with helpers {
        info("ちなみに、finallyは値を返さない")
      }
      it("finallyで例外が発生すると、その例外がスローされる"){
-       pending
+       intercept[java.lang.Exception]{
+         try {
+           val path = "http://horstmann.com/fred-tiny.gif"
+         } finally {
+           throw new Exception
+         }
+       }
      }
      it("loan pattern によるリソース管理"){
-       pending
+       def using[T,R <: { def close() }](resource : R)(func: R => T) : T = {
+         try {
+           func(resource)
+         } finally {
+           resource.close
+         }
+       }
+       
+       import java.net.URL
+       import java.io.InputStream
+       val url = new URL("https://github.com/akimichi/scala-seminar")
+       val size = using(url.openStream()) { resource =>
+         val content = scala.io.Source.fromInputStream(resource)
+         content.length
+       }
+       size should not equal(0)
      }
-     // it("Tryを用いた関数的な例外処理"){
-     //   info("http://danielwestheide.com/blog/2012/12/26/the-neophytes-guide-to-scala-part-6-error-handling-with-try.html")
-     // }
     }
   }
 }
