@@ -149,11 +149,10 @@ class Chapter03Spec extends FunSpec with ShouldMatchers with helpers {
       info("ランダムアクセスが必要な場合は、Listではなく、Vectorを使うべき")
     }
     describe("使い分けのためのパターン"){
-      it("traitの場合"){
+      it("traitから無名クラスを生成する場合"){
         trait Abstract {
           val collection:Seq[Int]
         }
-        
         val list = new Abstract {
           val collection = List.range(1,100000)
         }
@@ -161,6 +160,28 @@ class Chapter03Spec extends FunSpec with ShouldMatchers with helpers {
         val vector  = new Abstract {
           val collection = Vector.range(1,100000)
         }
+        vector.collection(99998) should equal(99999)
+      }
+      it("traitから適切なクラスを派生する場合"){
+        trait Abstract {
+          val collection:Seq[Int]
+        }
+        class PrependHeavyCollection(val collection:List[Int]) extends Abstract
+        class RandomAccessReadyCollection(val collection:Vector[Int]) extends Abstract
+        
+        val list = new PrependHeavyCollection(List.range(1,100000))
+        list.collection(0) should equal(1)
+        
+        val vector  = new RandomAccessReadyCollection(Vector.range(1,100000))
+        vector.collection(99998) should equal(99999)
+      }
+      it("classの場合"){
+        class Container(val collection:Seq[Int])
+        
+        val list = new Container(List.range(1,100000))
+        list.collection(0) should equal(1)
+      
+        val vector  = new Container(Vector.range(1,100000))
         vector.collection(99998) should equal(99999)
       }
       it("methodの場合"){
