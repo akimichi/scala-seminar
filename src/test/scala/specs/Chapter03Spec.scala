@@ -28,6 +28,32 @@ class Chapter03Spec extends FunSpec with ShouldMatchers with helpers {
         val result = for (elem <- a if elem % 2 == 0) yield 2 * elem
         result should equal(List(4))
       }
+      describe("リスト内包で素数を計算する"){
+        val factors : Int => Seq[Int] = (n:Int) => {
+          val list = List.range(1,n + 1)
+          for {
+            x <- list
+            if n % x == 0
+          } yield x
+        }
+        factors(10) should equal(List(1,2,5,10))
+        factors(7) should equal(List(1,7))
+
+        val isPrime : Int => Boolean = (n:Int) => {
+          factors(n) == List(1,n)
+        }
+        isPrime(15) should equal(false)
+        isPrime(7) should equal(true)
+
+        val primes : Int => Seq[Int] = (n:Int) => {
+          val list = List.range(2,n + 1)
+          for {
+            x <- list
+            if isPrime(x)
+          } yield x
+        }
+        primes(40) should equal(List(2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37))
+      }
     }
     describe("sec 3.5"){
       it("sum") {
