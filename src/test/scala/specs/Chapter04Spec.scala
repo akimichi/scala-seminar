@@ -28,8 +28,64 @@ class Chapter04Spec extends FunSpec with ShouldMatchers with helpers {
       }
     }
     describe("sec 4.3"){
+      it("mutableなMapのデータを更新する"){
+        val scores = collection.mutable.Map("Alice" -> 10, "Bob" -> 3, "Cindy" -> 8)
+        info("valで変数が宣言されている点に注意")
+        scores("Bob") should equal(3)
+        scores("Bob") = 10
+        scores("Bob") should equal(10)
+        scores += ("Bob" -> 10, "Fred" -> 7)
+        scores should equal {
+          collection.mutable.Map("Alice" -> 10, "Bob" -> 10, "Cindy" -> 8, "Fred" -> 7)
+        }
+        scores -= "Alice"
+        scores should equal {
+          collection.mutable.Map("Bob" -> 10, "Cindy" -> 8, "Fred" -> 7)
+        }
+      }
+      it("immmutableなMapのデータを更新する"){
+        val scores = Map("Alice" -> 10, "Bob" -> 3, "Cindy" -> 8)
+        val newScores = scores + ("Bob" -> 10, "Fred" -> 7) // New map with update
+        newScores should equal {
+          collection.mutable.Map("Alice" -> 10,"Bob" -> 10, "Cindy" -> 8, "Fred" -> 7)
+        }
+      }
+      it("varと+=演算子を用いて、immutable なMapを更新する") {
+        var scores = Map("Alice" -> 10, "Bob" -> 3, "Cindy" -> 8)
+        scores = scores + ("Bob" -> 10, "Fred" -> 7)
+        scores should equal {
+          collection.mutable.Map("Alice" -> 10,"Bob" -> 10, "Cindy" -> 8, "Fred" -> 7)
+        }
+        info("-演算子でMapからデータを削除する")
+        scores = scores - "Alice"
+        scores should equal {
+          collection.mutable.Map("Bob" -> 10, "Cindy" -> 8, "Fred" -> 7)
+        }
+      }
     }
     describe("sec 4.4"){
+      val scores = Map("Alice" -> 10, "Bob" -> 3, "Cindy" -> 8)
+      it("forでMapを反復処理する"){
+        for {
+          (key, value) <- scores
+        } {
+          key match {
+            case "Alice" => value should equal(10)
+            case "Bob" => value should equal(3)
+            case "Cindy" => value should equal(8)
+            case _ => fail()
+          }
+        }
+      }
+      it("keySetでキーのセットを取得する"){
+        scores.keySet should equal(Set("Alice", "Bob", "Cindy"))
+      }
+      it("Mapのキーと値を交換する"){
+        val reveresed = for ((k, v) <- scores) yield (v, k)
+        reveresed should equal {
+          Map(10 -> "Alice", 3 -> "Bob", 8 -> "Cindy")
+        }
+      }
     }
     describe("sec 4.5"){
     }
@@ -60,11 +116,6 @@ class Chapter04Spec extends FunSpec with ShouldMatchers with helpers {
         }
       }
       it("forとパターンマッチで要素を取り出す") {
-        for {
-          (key, value) <- fixture.terms if key._1 == "at0001"
-        } {
-          key._2 should equal("en")
-        }
         info("タプルを入れ子にして取り出せる")
         for {
           ((code,lang), value) <- fixture.terms if code == "at0001"
@@ -79,11 +130,6 @@ class Chapter04Spec extends FunSpec with ShouldMatchers with helpers {
         
       }
       */
-      it("varと+=演算子を用いて、immutable なMapに要素を追加する") {
-        var map = Map("ja" -> "テキスト")
-        map += ("en" -> "text")
-        map.get("en") should equal(Some("text"))
-      }
     }
 
     describe("sec 4.7"){
