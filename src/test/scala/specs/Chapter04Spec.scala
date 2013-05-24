@@ -88,9 +88,41 @@ class Chapter04Spec extends FunSpec with ShouldMatchers with helpers {
       }
     }
     describe("sec 4.5"){
+      it("SortedMap"){
+        val scores = scala.collection.immutable.SortedMap("Alice" -> 10,"Fred" -> 7, "Bob" -> 3, "Cindy" -> 8)
+        scores should equal{
+          Map("Alice" -> 10, "Bob" -> 3, "Cindy" -> 8, "Fred" -> 7)
+        }
+      }
     }
     describe("sec 4.6"){
-      it("javaと連携する"){
+      info("scalaとjavaのあいだのコレクション型の変換には、JavaConversionsとJavaConvertersの2種類がある")
+      describe("JavaConversionsでjavaと連携する"){
+        /*
+         * Javaコレクションに対しScalaコレクションのメソッドを適用すれば、JavaコレクションからScalaコレクション（のラッパークラス）に暗黙に変換される
+         */ 
+        info("http://www.scala-lang.org/api/current/index.html#scala.collection.JavaConversions$")
+        import scala.collection.JavaConversions._
+        
+        val props = System.getProperties()
+        props("java.runtime.name") should not equal("")
+      }
+      describe("JavaConvertersでjavaと連携する"){
+        /*
+         * JavaConvertersオブジェクトのメソッドをインポートしておくと、変換メソッド（asScalaやasJava）が呼び出せるようになる。
+         * すなわち、変換は明示的に行う必要がある。
+         */ 
+        info("http://www.scala-lang.org/api/current/index.html#scala.collection.JavaConverters$")
+        import scala.collection.JavaConverters._
+
+        it("asScalaメソッドで JavaのMapをScalaのMapに変換する"){
+          val props = System.getProperties().asScala
+          props("java.runtime.name") should not equal("")
+        }
+        it("asJavaメソッドで ScalaのListをJavaのListに変換する"){
+          val codeList:java.util.List[String] = List("mean", "total").asJava
+        }
+        
       }
     }
     describe("Mapの説明を補足する"){
@@ -104,40 +136,112 @@ class Chapter04Spec extends FunSpec with ShouldMatchers with helpers {
       it("toListでMapをListに変換する") {
         sample_map.toList should equal(List((1,"value1"), (2,"value2")))
       }
-      /*
-      it("foreachとパターンマッチで要素を取り出す") {
-        sample_map.foreach { case (key,value) =>
-          key match {
-            case (term,lang) if term == "at0000" => {
-              lang should equal("jp")
-            }
-            case _ => {}
-          }
-        }
-      }
-      it("forとパターンマッチで要素を取り出す") {
-        info("タプルを入れ子にして取り出せる")
-        for {
-          ((code,lang), value) <- fixture.terms if code == "at0001"
-        } {
-          lang should equal("en")
-        }
-        it("foreachで要素を繰り返し処理する") {
-          fixture.simple_map.foreach { case (key,value) =>
-            value should equal("value%s".format(key))
-          }
-        }
-        
-      }
-      */
     }
 
     describe("sec 4.7"){
-      it("Tuple"){
+      it("Tupleを操作する"){
+        val tuple : Tuple3[Int,Double,String] = (1, 3.14, "Fred")
+        tuple._1 should equal(1)
+        tuple._2 should equal(3.14)
+
+        info("パターンマッチングで個々の要素を変数に取り出したほうが、可読性がよい")
+        val (first, second, third) = tuple
+        first should equal(1)
+        second should equal(3.14)
+      }
+      it("Tupleを返すメソッド"){
+        "New York".partition(_.isUpper) // Yields the pair ("NY", "ew ork")
+      }
+
+      it("補足: for内包のなかでTupleの要素を取り出す") {
+        type ID = Int
+        type Lang = String
+        type Title = String
+        type Author = String
+        type Book = Tuple2[Title,Lang]
+        type Record = Tuple3[ID,Author, Book]
+        val books : List[Record] = List((1,"Shakespeare",("King Lear","en")),
+                                        (2,"Rousseau",("Emile","fr")),
+                                        (3,"Chekov",("Three sisters","ru")))
+        info("タプルを入れ子にして取り出せる")
+        for {
+          (id, author, (title,lang)) <- books if lang == "ru"
+        } {
+          author should equal("Chekov")
+        }
+      }
+      it("補足: Tupleでのパターンマッチ"){
+        type Person = Tuple3[String,Symbol,Int]
+        val man : Person = ("foo",'Male,20)
+       
+        man match {
+          case (name, 'Male, age) if age < 20 => fail()
+          case (name, 'Female,age) if age >= 20  => fail()
+          case (name, gender,age) => {
+            name should equal("foo")
+          }
+        }
+      }
+      describe("発展"){
+        type Name = String
+        type Iden = Int
+        type Mark = Int
+
+        type Codes = List[(Name,Iden)]
+        type Marks = List[(Iden,Mark)]
+
+        val codes:Codes = List("ANDERSON" -> 101372,
+                               "BAYLIS" -> 101369,
+                               "CARTER" -> 101370,
+                               "DENNIS" -> 101371,
+                               "EDWARD" -> 101373)
+        val marks:Marks = List(101369 -> 62,
+                               101370 -> 75,
+                               101371 -> 62,
+                               101372 -> 30,
+                               101373 -> 50)
+                          
+        def pair[A,B,C] : Pair[A => B, A => C] => A => Pair[B,C] = {(fg:Pair[A => B, A => C]) => { x:A =>
+          val (f,g) : Pair[A => B, A => C] = fg
+          (f(x), g(x))
+        }}
+        /* 
+         cross(xs ys) = [(x, y) |  x <- xs, y <- ys]
+         */ 
+        def cross[A,B,C,D] : Pair[A => B, C => D] => Pair[A,C] => Pair[B,D] = {(fg:Pair[A => B, C => D]) => { ac:Pair[A,C] =>
+          val (f,g) : Pair[A => B, C => D] = fg
+          val (a,c) : Pair[A,C] = ac
+          val (b,d) : Pair[B,D] = (f(a), g(c))
+          (b,d)
+        }}
+
+        /*
+        def collate(codes:Codes, marks:Marks) : List[Pair[Name,Mark]] = {
+          val ids:List[Iden] = for {
+            code <- codes
+            mark <- marks
+            
+          } yield {
+            val ab : (Name,Iden) => Name = {(name,iden) =>
+              name
+            }
+            val bd : (Iden, Mark) => Mark = {(iden,mark) =>
+              mark
+            }
+            cross[(Name,Iden),Name,(Iden,Mark),Mark]((ab,bd))(code, mark)
+          }
+        }
+        */ 
       }
     }
     describe("sec 4.8"){
       it("zipする"){
+        val symbols = List("<", "-", ">")
+        val counts = List(2, 10, 2)
+        val pairs : List[Tuple2[String,Int]] = symbols.zip(counts)
+        pairs should equal {
+          List(("<", 2), ("-", 10), (">", 2))
+        }
       }
     }
   }
