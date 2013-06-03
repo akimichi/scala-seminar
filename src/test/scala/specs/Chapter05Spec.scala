@@ -17,10 +17,11 @@ class Chapter05Spec extends FunSpec with ShouldMatchers with helpers {
         }
         val myCounter = new Counter
         myCounter.increment()
-        myCounter.current should equal(0)
-
+        myCounter.current should equal(1)
       }
     }
-
+    describe("sec 5.2"){
+      
+    }
   }
 }
