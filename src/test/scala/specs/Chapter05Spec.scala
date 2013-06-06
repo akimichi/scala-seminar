@@ -202,7 +202,7 @@ class Chapter05Spec extends FunSpec with ShouldMatchers with helpers {
         val wilma = chatter.join("Wilma")
         fred.contacts += wilma // OK
         val barney:myFace.Member = myFace.join("Barney") // barney は myFace.Member型となる
-        // fred.contacts += barney // fred は chatter.Member型となる。
+        // fred.contacts += barney // fred は chatter.Member型となるので、この行はコンパイルエラーとなる
       }
       it("コンパニオンオブジェクトを利用する"){
         object Network {
@@ -212,7 +212,7 @@ class Chapter05Spec extends FunSpec with ShouldMatchers with helpers {
         }
         class Network {
           private val members = new ArrayBuffer[Network.Member]
-          def join(name: String) = {
+          def join(name: String):Network.Member = {
             val m = new Network.Member(name)
             members += m
             m
@@ -222,6 +222,9 @@ class Chapter05Spec extends FunSpec with ShouldMatchers with helpers {
         val myFace = new Network
         val fred:Network.Member = chatter.join("Fred")
         val wilma:Network.Member = chatter.join("Wilma")
+        fred.contacts += wilma // OK
+        val barney:Network.Member = myFace.join("Barney") // barney は Network.Member型となる
+        fred.contacts += barney // fred は Network.Member型となる。
       }
       it("型プロジェクションを利用する"){
         class Network {
@@ -244,10 +247,25 @@ class Chapter05Spec extends FunSpec with ShouldMatchers with helpers {
       }
       it("self型を利用する"){
         class Network(val name: String) { outer =>
+          private val members = new ArrayBuffer[Member]
           class Member(val name: String) {
             def description = name + " inside " + outer.name
+            val contacts = new ArrayBuffer[Network#Member]
+            // val contacts = new ArrayBuffer[outer.Member]
+          }
+          def join(name: String) : outer.Member = {
+            val m = new Member(name)
+            members += m
+            m
           }
         }
+        val chatter = new Network("chatter")
+        val myFace = new Network("myFace")
+        val fred:chatter.Member = chatter.join("Fred")
+        fred.description should equal("Fred inside chatter")
+        val wilma:chatter.Member = chatter.join("Wilma")
+        val barney:myFace.Member = myFace.join("Barney") // barney は myFace.Member型となる
+        fred.contacts += barney
       }
     }
   }
