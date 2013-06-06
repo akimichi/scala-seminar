@@ -74,6 +74,8 @@ class Chapter05Spec extends FunSpec with ShouldMatchers with helpers {
           class Person {
             val age = 0
           }
+          val fred = new Person
+          fred.age should equal(0)
         }
         
         {
@@ -111,19 +113,23 @@ class Chapter05Spec extends FunSpec with ShouldMatchers with helpers {
       class Person {
         @BeanProperty var name: String = _
       }
-
+      it("@BeanPropertyで設定されたゲッターセッターを利用する"){
+        val fred = new Person
+        fred.setName("fred")
+        fred.getName should equal("fred")
+      }
     }
     describe("sec 5.6"){
-      it("補助コンストラクタは、必ず主コンストラクあるいは他の補助コンストクタを呼出す必要がある"){
+      it("補助コンストラクタは、必ず主コンストラクタあるいは他の補助コンストクタを呼出す必要がある"){
         class Person {
           private var name = ""
           private var age = 0
-          def this(name: String) { // An auxiliary constructor
-            this() // Calls primary constructor
+          def this(name: String) { // これは補助コンストラクタ
+            this() // ここで主コンストラクタを呼んでいる
             this.name = name
           }
-          def this(name: String, age: Int) { // Another auxiliary constructor
-            this(name) // Calls previous auxiliary constructor
+          def this(name: String, age: Int) { // 別の補助コンストラクタ
+            this(name) // 前述の補助コンストラクタを呼んでいる
             this.age = age
           }
         }
@@ -135,6 +141,9 @@ class Chapter05Spec extends FunSpec with ShouldMatchers with helpers {
     describe("sec 5.7"){
       it("主コンストラクタによるクラス定義"){
         class Person(val name: String, val age: Int)
+        val fred = new Person("fred", 10)
+        fred.name should equal("fred")
+        fred.age should equal(10)
         
       }
       it("主コンストラクタは、インスタンス生成時にクラス定義内の文を実行する"){
@@ -142,10 +151,18 @@ class Chapter05Spec extends FunSpec with ShouldMatchers with helpers {
           println("Just constructed another person")
           def description = name + " is " + age + " years old"
         }
+        info("インスタンス生成時に、設定ファイルを読みこませる")
+        
         class MyProg {
-          private val props = new Properties
-          props.load(new FileReader("myprog.properties"))
+          import java.util.Properties
+          import java.io.FileReader
+          
+          val props = new Properties
+          props.load(new FileReader("src/test/resources/myprog.properties"))
         }
+        val myprog = new MyProg
+        myprog.props.get("foo") should equal("bar")
+        
       }
       it("さまざまな主コンストラクタ"){
         {
@@ -160,35 +177,32 @@ class Chapter05Spec extends FunSpec with ShouldMatchers with helpers {
 
         {
           class Person private(val id: Int)
+          
         }
-
-
       }
-
-     
     }
-    describe("sec 5.8")
-      it("クラスのネスト"){
-        import scala.collection.mutable.ArrayBuffer
+    
+    describe("sec 5.8"){
+      import scala.collection.mutable.ArrayBuffer
+      it("クラスをネストさせる"){
         class Network {
           class Member(val name: String) {
             val contacts = new ArrayBuffer[Member]
           }
           private val members = new ArrayBuffer[Member]
-          def join(name: String) = {
+          def join(name: String):Member = {
             val m = new Member(name)
             members += m
             m
           }
         }
-        
         val chatter = new Network
         val myFace = new Network
-        val fred = chatter.join("Fred")
+        val fred:chatter.Member = chatter.join("Fred")
         val wilma = chatter.join("Wilma")
         fred.contacts += wilma // OK
-        val barney = myFace.join("Barney") // Has type myFace.Member
-        fred.contacts += barney
+        val barney:myFace.Member = myFace.join("Barney") // barney は myFace.Member型となる
+        // fred.contacts += barney // fred は chatter.Member型となる。
       }
       it("コンパニオンオブジェクトを利用する"){
         object Network {
@@ -198,14 +212,35 @@ class Chapter05Spec extends FunSpec with ShouldMatchers with helpers {
         }
         class Network {
           private val members = new ArrayBuffer[Network.Member]
+          def join(name: String) = {
+            val m = new Network.Member(name)
+            members += m
+            m
+          }
         }
+        val chatter = new Network
+        val myFace = new Network
+        val fred:Network.Member = chatter.join("Fred")
+        val wilma:Network.Member = chatter.join("Wilma")
       }
       it("型プロジェクションを利用する"){
         class Network {
+          private val members = new ArrayBuffer[Member]
           class Member(val name: String) {
             val contacts = new ArrayBuffer[Network#Member]
           }
+          def join(name: String) = {
+            val m = new Member(name)
+            members += m
+            m
+          }
         }
+        val chatter = new Network
+        val myFace = new Network
+        val fred:chatter.Member = chatter.join("Fred")
+        val wilma:chatter.Member = chatter.join("Wilma")
+        val barney:myFace.Member = myFace.join("Barney") // barney は myFace.Member型となる
+        fred.contacts += barney // fred は chatter.Member型であるが、contactsが ArrayBuffer[Network#Member]なので、エラーにならない。
       }
       it("self型を利用する"){
         class Network(val name: String) { outer =>
@@ -214,5 +249,6 @@ class Chapter05Spec extends FunSpec with ShouldMatchers with helpers {
           }
         }
       }
+    }
   }
 }
