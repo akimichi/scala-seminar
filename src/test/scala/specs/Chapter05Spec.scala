@@ -66,17 +66,24 @@ class Chapter05Spec extends FunSpec with ShouldMatchers with helpers {
       it("ゲッターセッターの可視性を制御する"){
         {
           class Person {
+            // privateメンバーは、そのゲッターセッターも private となる
             private var age = 0
+            def increment() { age += 1 }
+            def current = age
           }
+          val fred = new Person
+          fred.increment()
         }
         
         {
           class Person {
+            // val の場合は、ゲッターのみが付与される
             val age = 0
           }
           val fred = new Person
           fred.age should equal(0)
         }
+        info("private[this]を前置すると、ゲッターセッターが付与されない")
         
         {
           class Person {
@@ -87,10 +94,12 @@ class Chapter05Spec extends FunSpec with ShouldMatchers with helpers {
       
     }
     describe("sec 5.3"){
+      info("インスタンス生成後に不変な変数は、val で宣言する")
       class Message {
         val timeStamp = new java.util.Date
       }
 
+      info("インスタンス生成後に可変な変数は、var で宣言する")
       class Counter {
         private var value = 0
         def increment() { value += 1 }
@@ -120,8 +129,8 @@ class Chapter05Spec extends FunSpec with ShouldMatchers with helpers {
       }
     }
     describe("sec 5.6"){
-      it("補助コンストラクタは、必ず主コンストラクタあるいは他の補助コンストクタを呼出す必要がある"){
-        class Person {
+      it("補助コンストラクタは、必ず先頭で主コンストラクタあるいは他の補助コンストクタを呼出す必要がある"){
+        class Person() {
           private var name = ""
           private var age = 0
           def this(name: String) { // これは補助コンストラクタ
@@ -133,9 +142,25 @@ class Chapter05Spec extends FunSpec with ShouldMatchers with helpers {
             this.age = age
           }
         }
-        val p1 = new Person // Primary constructor
+        val p1 = new Person() // Primary constructor
         val p2 = new Person("Fred") // First auxiliary constructor
         val p3 = new Person("Fred", 42) // Second auxiliary constructor
+      }
+      it("補足: 多くの補助コンストラクが必要となる場合には、コンパニオンオブジェクトにファクトリーメソッドを定義するほうが簡便である"){
+        class Person {
+          private var name = ""
+          private var age = 0
+        }
+        object Person {
+          def apply(_name: String = "", _age: Int = 0) : Person = new Person {
+            var name = _name
+            var age = _age
+          }
+        }
+        val p1 = Person()
+        val p2 = Person("Fred")
+        val p3 = Person("Fred", 42)
+        
       }
     }
     describe("sec 5.7"){
@@ -146,13 +171,13 @@ class Chapter05Spec extends FunSpec with ShouldMatchers with helpers {
         fred.age should equal(10)
         
       }
-      it("主コンストラクタは、インスタンス生成時にクラス定義内の文を実行する"){
+      it("コンストラクタは、インスタンス生成時にクラス定義内の文を実行する"){
         class Person(val name: String, val age: Int) {
           println("Just constructed another person")
           def description = name + " is " + age + " years old"
         }
-        info("インスタンス生成時に、設定ファイルを読みこませる")
-        
+      }
+      it("インスタンス生成時に、設定ファイルを読みこませる例"){
         class MyProg {
           import java.util.Properties
           import java.io.FileReader
@@ -162,9 +187,8 @@ class Chapter05Spec extends FunSpec with ShouldMatchers with helpers {
         }
         val myprog = new MyProg
         myprog.props.get("foo") should equal("bar")
-        
       }
-      it("さまざまな主コンストラクタ"){
+      describe("さまざまな主コンストラクタ"){
         {
           class Person(val name: String, private var age: Int)
         }
@@ -175,8 +199,16 @@ class Chapter05Spec extends FunSpec with ShouldMatchers with helpers {
           }
         }
 
-        {
-          class Person private(val id: Int)
+        it("主コンストラクの引数を private にする") {
+          object test {
+            class Person private (val id: Int)
+            
+            object Person  {
+              def apply(id:Int) : Person = new Person(id)
+            }
+          }
+          import test._
+          val fred = Person(1)
           
         }
       }
@@ -184,7 +216,7 @@ class Chapter05Spec extends FunSpec with ShouldMatchers with helpers {
     
     describe("sec 5.8"){
       import scala.collection.mutable.ArrayBuffer
-      it("クラスをネストさせる"){
+      it("インナークラスを使う"){
         class Network {
           class Member(val name: String) {
             val contacts = new ArrayBuffer[Member]
@@ -205,6 +237,8 @@ class Chapter05Spec extends FunSpec with ShouldMatchers with helpers {
         // fred.contacts += barney // fred は chatter.Member型となるので、この行はコンパイルエラーとなる
       }
       it("コンパニオンオブジェクトを利用する"){
+        info("コンパニオンオブジェクトとは、同一のソースファイルに同じ名前のクラスとシングルトンを定義したときのシングルトンを指す")
+        info("クラスとコンパニオンオブジェクトは、互いのプライベートメンバーにアクセスできる")
         object Network {
           class Member(val name: String) {
             val contacts = new ArrayBuffer[Member]
@@ -226,7 +260,7 @@ class Chapter05Spec extends FunSpec with ShouldMatchers with helpers {
         val barney:Network.Member = myFace.join("Barney") // barney は Network.Member型となる
         fred.contacts += barney // fred は Network.Member型となる。
       }
-      it("型プロジェクションを利用する"){
+      it("パス依存型を利用する"){
         class Network {
           private val members = new ArrayBuffer[Member]
           class Member(val name: String) {
@@ -266,6 +300,38 @@ class Chapter05Spec extends FunSpec with ShouldMatchers with helpers {
         val wilma:chatter.Member = chatter.join("Wilma")
         val barney:myFace.Member = myFace.join("Barney") // barney は myFace.Member型となる
         fred.contacts += barney
+      }
+      it("補足:インナーtraitの例"){
+        trait Component {
+          trait Answer {
+            val result:String
+          }
+          def computation:Answer
+        }
+        trait moduleA {
+          trait ComponentA extends Component {
+            def computation:Answer = new Answer {
+              val result = "A"
+            }
+          }
+        }
+        trait moduleB {
+          trait ComponentB extends Component {
+            def computation:Answer = new Answer {
+              val result = "B"
+            }
+          }
+        }
+        object App extends moduleA with moduleB with Component {
+          val componentA = new ComponentA {}
+          val componentB = new ComponentB {}
+          def computation:Answer = {
+            new Answer {
+              val result = componentA.computation.result + componentB.computation.result
+            }
+          }
+        }
+        App.computation.result should equal("AB")
       }
     }
   }
