@@ -35,6 +35,10 @@ class Chapter07Spec extends FunSpec with ShouldMatchers with helpers {
       class Manager {
         import scala.collection.mutable._
         val subordinates = new ArrayBuffer[Int]
+        def a_method = {
+          import java.util.HashMap
+          {}
+        }
       }
     }
     describe("sec 7.9"){
@@ -53,7 +57,14 @@ class Chapter07Spec extends FunSpec with ShouldMatchers with helpers {
       }
     }
     describe("sec 7.10"){
-      
+      /*
+       * 以下のパッケージはデフォルトで読みこまれる
+       * 
+       * import java.lang._
+       * import scala._
+       * import Predef._
+       *
+       */ 
     }
   }
 }

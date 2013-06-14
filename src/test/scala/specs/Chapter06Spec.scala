@@ -1,3 +1,5 @@
+package test
+
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.FunSuite
@@ -104,9 +106,14 @@ class Chapter06Spec extends FunSpec with ShouldMatchers with helpers {
         else
           println("Hello, World!")
       }
+      /*
+       * > scalac Hello.scala
+       * > scala Hello
+       *
+       */ 
     }
     describe("sec 6.6"){
-      it("enumeration"){
+      it("列挙型は Enumerationクラスを利用する"){
         object TrafficLightColor extends Enumeration {
           val Red, Yellow, Green = Value
         }
@@ -119,6 +126,8 @@ class Chapter06Spec extends FunSpec with ShouldMatchers with helpers {
           }
         }
         doWhat(Red) should equal("stop")
+        info("idメソッドは、列挙型に割当てられた整数の識別子を返す")
+        Red.id should equal(0)
       }
       it("type aliasを使う"){
         object TrafficLightColor extends Enumeration {
@@ -136,21 +145,25 @@ class Chapter06Spec extends FunSpec with ShouldMatchers with helpers {
         }
         doWhat(Red) should equal("stop")
       }
-      describe("Enumerationを合成で使う"){
-        object test {
-          object Gender extends Enumeration {
-            type Gender = Value
-            val Male,Female = Value
+      describe("補足: case object で Enumeration類似の機能を実現する"){
+        sealed abstract class TrafficLightColor(val code:Int) {
+          def doWhat:String = {
+            code match {
+              case 0 => "stop"
+              case 1 => "hurry up"
+              case _ => "go"
             }
-          import Gender._
-          class Human(val gender:Gender)
+          }
+          
         }
-        it("定義された列挙型 Gender をHumanで使う"){
-          import test._
-          import Gender._
-          val man = new Human(Male)
-          man.gender should equal(Male)
+        object TrafficLightColor {
+          case object Red extends TrafficLightColor(0)
+          case object Yellow extends TrafficLightColor(1)
+          case object Green extends TrafficLightColor(2)
         }
+        
+        import TrafficLightColor._
+        Red.doWhat should equal("stop")
       }
     }
     describe("補足"){
