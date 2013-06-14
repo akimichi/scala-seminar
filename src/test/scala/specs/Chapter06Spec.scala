@@ -106,7 +106,8 @@ class Chapter06Spec extends FunSpec with ShouldMatchers with helpers {
         else
           println("Hello, World!")
       }
-      /*
+      /* 上記のプログラムは以下のように実行する*
+       * 
        * > scalac Hello.scala
        * > scala Hello
        *
