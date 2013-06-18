@@ -75,10 +75,68 @@ class Chapter08Spec extends FunSpec with ShouldMatchers with helpers {
           fail("trueになるべき")
           
       }
+      it("パターンマッチのほうが望ましい"){
+        val person:Person = new Employee
+        person match {
+          case employee: Employee => {
+            employee.salary should equal(10.0)
+          }
+          case _ => fail()
+        }
+        
+      }
     }
     describe("sec 8.4: Protected Fields and Methods"){
+      
     }
     describe("sec 8.5: Superclass Construction"){
+      class Person(val name:String, val age:Int)      
+      class Employee(name: String, age: Int, val salary : Double) extends Person(name, age)
+
+      it("javaのクラスを継承する"){
+        import java.awt.Rectangle
+
+        class Square(x: Int, y: Int, width: Int) extends java.awt.Rectangle(x, y, width, width)
+
+      }
     }
+    describe("sec 8.6: Overriding Fields"){
+      {
+        class Person(val name: String) {
+        override def toString = getClass.getName + "[name=" + name + "]"
+        }
+        class SecretAgent(codename: String) extends Person(codename) {
+          override val name = "secret" // Don’t want to reveal name . . .
+          override val toString = "secret" // . . . or class name
+        }
+      }
+
+      {
+        abstract class Person { // See Section 8.8 for abstract classes
+          def id: Int // Each person has an ID that is computed in some way
+        }
+        class Student(override val id: Int) extends Person
+        
+      }
+
+      
+    }
+    describe("sec 8.7: Anonymous Subclasses"){
+      class Person(val name:String)      
+      val alien = new Person("Fred") {
+        def greeting = "Greetings, Earthling! My name is %s.".format(name)
+      }
+      alien.greeting should equal("Greetings, Earthling! My name is Fred.")
+    }
+    describe("sec 8.8: Abstract Classes"){
+      
+    }
+    describe("sec 8.9: Abstract Fields"){
+      
+    }
+    describe("sec 8.10: Construction Order and Early Definitions"){
+      
+    }
+
   }
 }
