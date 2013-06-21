@@ -287,15 +287,29 @@ class Chapter08Spec extends FunSpec with ShouldMatchers with helpers {
       }
     }
     describe("補足:case class では、equalsとhashCodeがメンバーから自動的に定義されている"){
-      case class Item(val name: String, val price: Double, val color:String)
-      val an_item = Item("an item",10.0, "Red")
-      val another_item = Item("an item",10.0, "Black")
-      an_item.equals(another_item) should equal(false)
-      val an_item_with_same_values = Item("an item",10.0, "Red")
-      an_item.equals(an_item_with_same_values) should equal(true)
-      
-      import scala.collection.mutable.HashSet
-      HashSet(an_item).contains(an_item_with_same_values) should equal(true)
+      it("colorを等値判定に含める"){
+        case class Item(val name: String, val price: Double, val color:String)
+        val an_item = Item("an item",10.0, "Red")
+        val another_item = Item("an item",10.0, "Black")
+        an_item.equals(another_item) should equal(false)
+        val an_item_with_same_values = Item("an item",10.0, "Red")
+        an_item.equals(an_item_with_same_values) should equal(true)
+        
+        import scala.collection.mutable.HashSet
+        HashSet(an_item).contains(an_item_with_same_values) should equal(true)
+      }
+      it("colorを等値判定から除きたい場合"){
+        case class Item(val name: String, val price: Double) {
+          var color:Option[String] = None
+        }
+        val an_item = Item("an item",10.0)
+        an_item.color = Some("Red")
+        val another_item = Item("an item",10.0)
+        another_item.color = Some("Black")
+        an_item.equals(another_item) should equal(true)
+        import scala.collection.mutable.HashSet
+        HashSet(an_item).contains(another_item) should equal(true)
+      }
     }
   }
 }
