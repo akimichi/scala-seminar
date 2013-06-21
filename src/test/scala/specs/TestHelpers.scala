@@ -25,35 +25,4 @@ trait helpers {
        acc
      }
    }
-   /*
-   object mongodb {
-     import com.mongodb.casbah.Imports._
-    import com.mongodb.{CommandResult}
-    import com.mongodb.util._
-    import scala.collection.JavaConversions._
-
-    com.mongodb.casbah.commons.conversions.scala.RegisterConversionHelpers()
-    def connection(dbname:String, colname:String):(MongoDB, MongoCollection) = {
-      val db = MongoConnection()(dbname)
-      val collection = db(colname)
-      (db,collection)
-    }
-
-    // resourcesディレクトリ下にある fileをMongoDBに読みこむ
-    val loadJsonToMongoDB = (collection:MongoCollection) => (source:String) =>  {
-      var record = JSON.parse(source).asInstanceOf[BasicDBObject]
-      collection.insert(record)
-    }
-    def aggregationResult(collectionName:String, pipeline: MongoDBList)(implicit database:MongoDB):Either[Throwable, MongoDBList] = {
-      val command_result:CommandResult = database.command(MongoDBObject("aggregate" -> collectionName, "pipeline" -> pipeline))
-      command_result.ok() match {
-        case true => {
-          Right(command_result.as[MongoDBList]("result"))
-        }
-        case false => Left(new Exception(command_result.getErrorMessage()))
-      }
-    }
-  }
-  */ 
-  
 }

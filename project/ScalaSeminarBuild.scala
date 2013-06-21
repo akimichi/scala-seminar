@@ -22,8 +22,8 @@ object ScalaSeminarBuild extends Build {
        *  -Xprint:typer 暗黙変換の情報を表示する
        *  -Xcheckinit   継承関係における予測しがたいスーパークラスの初期化をチェックする(c.f. Scala for the Impatient,p.93)
        */
-      scalacOptions ++= Seq("-unchecked", "-deprecation"),
-      // scalacOptions ++= Seq("-unchecked", "-deprecation","-Xcheckinit"),
+      // scalacOptions ++= Seq("-unchecked", "-deprecation"),
+      scalacOptions ++= Seq("-unchecked", "-deprecation","-Xcheckinit"),
       resolvers ++= Seq("Typesafe Releases" at "http://repo.typesafe.com/typesafe/releases",
                         "snapshots" at "http://oss.sonatype.org/content/repositories/snapshots",
                         "releases"  at "http://oss.sonatype.org/content/repositories/releases",
