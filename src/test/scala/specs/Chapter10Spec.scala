@@ -8,6 +8,19 @@ import org.scalatest.{ FunSpec, BeforeAndAfterAll, BeforeAndAfterEach }
 import scala_seminar._
 
 class Chapter10Spec extends FunSpec with ShouldMatchers with helpers {
+  trait Action[T] {
+    val arg:T
+    def invoke:Unit
+  }
+  trait EmptyAction[T] extends Action[T] {
+    def invoke:Unit = { }
+  }
+  trait ConsoleAction[T] extends Action[T] {
+    def invoke:Unit = println(arg)
+  }
+  trait FileAction[T] extends Action[T] {
+    def invoke:Unit = println(arg)
+  }
   describe("sec 10.1: Why No Multple Inheritance?"){
   }
   describe("sec 10.2: Traits as Interfaces"){
@@ -44,19 +57,6 @@ class Chapter10Spec extends FunSpec with ShouldMatchers with helpers {
 
   }
   describe("sec 10.4: Objects with Traits"){
-    trait Action[T] {
-      val arg:T
-      def invoke:Unit
-    }
-    trait EmptyAction[T] extends Action[T] {
-      def invoke:Unit = { }
-    }
-    trait ConsoleAction[T] extends Action[T] {
-      def invoke:Unit = println(arg)
-    }
-    trait FileAction[T] extends Action[T] {
-      def invoke:Unit = println(arg)
-    }
     
     trait Logged {
       def log(msg: String):Action[String] =  new EmptyAction[String] {
@@ -91,8 +91,15 @@ class Chapter10Spec extends FunSpec with ShouldMatchers with helpers {
 
   }
   describe("sec 10.5: Layered Traits"){
+
+    trait Logged {
+      def log(msg: String):Action[String] =  new EmptyAction[String] {
+        val arg = msg
+      }
+    }
+
     trait TimestampLogger extends Logged {
-      override def log(msg: String) {
+      override def log(msg: String):Action[String] = {
         super.log(new java.util.Date() + " " + msg)
       }
     }
@@ -112,6 +119,18 @@ class Chapter10Spec extends FunSpec with ShouldMatchers with helpers {
   describe("sec 10.12: Traits Extending Classes"){
   }
   describe("sec 10.13: Self Types"){
+    describe("補足: self type を使えば、循環参照が可能である"){
+      trait A {self: B=>}
+      trait B {self: A=>}
+      /*
+       * trait Model extends Evaluator
+       * trait Evaluator extends Model
+       * 
+       */
+      trait Model extends Evaluator
+      trait Evaluator { self :Model =>
+      }
+    }
   }
   describe("sec 10.14: What Happens under the Hood"){
   }
