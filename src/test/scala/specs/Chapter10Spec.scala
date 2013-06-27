@@ -22,6 +22,53 @@ class Chapter10Spec extends FunSpec with ShouldMatchers with helpers {
   trait FileAction[T] extends Action[T] {
     def invoke:Unit = println(arg)
   }
+  describe("補足: "){
+    info("http://lampwww.epfl.ch/~odersky/papers/ScalableComponent.pdf")
+    /*
+     class SymbolTable {
+       class Name { /* name specific operations */ }
+       class Type { /* subclasses of Type and type specific operations */ }  
+       class Symbol { /* subclasses of Symbol and symbol specific operations */ }  
+       object definitions { /* global definitions */ }
+       // other elements
+     }
+     この方法では、抽象構文木 Tree も NameやTypeを扱かう場面で困る。
+     */
+    trait Names {
+      class Name { /* name specific operations */ }
+    }
+    trait  Symbols { self : Names with Types => 
+      class Symbol { /* subclasses of Symbol and symbol specific operations */ }
+    }
+    trait Definitions { self : Names with Symbols => 
+      object definitions {  }
+    }
+    trait Types { self : Names with Symbols with Definitions =>
+      class Type { /* subclasses of Type and type specific operations */ }
+    }
+    class SymbolTable extends Names with Types with Symbols with Definitions
+    trait Trees { self : Names with Symbols with Definitions =>
+      class Tree { /* Asbtract Syntax Tree */ }
+    }
+    
+
+    class ScalaCompiler extends SymbolTable with Trees
+
+    info("コンパイラのシンボル操作と型操作にログ機能を付加する")
+    trait LogSymbols extends Symbols { self : Names with Types => 
+      import java.io.PrintStream
+      def log: PrintStream
+    }
+    trait LogTypes extends Types {self : Names with Symbols with Definitions =>
+      import java.io.PrintStream
+      def log: PrintStream
+    }
+    class LoggedCompiler extends ScalaCompiler with LogSymbols with LogTypes {
+      import java.io.PrintStream
+      val log: PrintStream = System.out
+    }
+  }
+  
   describe("sec 10.1: Why No Multple Inheritance?"){
   }
   describe("sec 10.2: Traits as Interfaces"){
@@ -289,13 +336,83 @@ class Chapter10Spec extends FunSpec with ShouldMatchers with helpers {
     info("Account,Logged, ShortLogger, SavingsAccount の順序で初期化されている")
   }
   describe("sec 10.11: Initializing Trait Fields"){
+    info("traitはコンストラクタでパラメータを持てない")
+    /* 以下はコンパイルエラーとなる
+     * val acct = new SavingsAccount with FileLogger("myapp.log")
+     */
+    it("抽象メンバーを用いて実現する"){
+      trait Logged {
+        def log(msg: String):Action[String] = new ConsoleAction[String] { val arg = msg }
+      }
+      trait FileLogger extends Logged {
+        def filename:String // val filename:String
+
+        import java.io.PrintStream
+        val out = new PrintStream(filename)
+        override def log(msg: String) = new FileAction[String] {
+          val arg = msg
+          out.println(msg)
+          out.flush
+        }
+      }
+      class SavingsAccount(var balance:Double) extends FileLogger {
+        def filename = "/tmp/app.log" // val filename = "/tmp/app.log"
+        
+        def withdraw(amount: Double):Action[String] = {
+          if (amount > balance)
+            log("Insufficient funds")
+          else {
+            balance -= amount
+            log("The balance is now %f".format(balance))
+          }
+        }
+      }
+      val acct = new SavingsAccount(100.0) with FileLogger
+      acct.withdraw(10.0)
+    }
   }
   describe("sec 10.12: Traits Extending Classes"){
+    trait Logged {
+      def log(msg: String):Action[String] = new ConsoleAction[String] { val arg = msg }
+    }
+    trait LoggedException extends Exception with Logged {
+      def log():Action[String] = {
+        log(getMessage())
+      }
+    }
+    trait UnhappyException extends LoggedException {
+      override def getMessage() = "arggh!"
+    }
+    info("mixinするtraitのスーパクラス(この場合は Exception)のサブクラスであれば、さらに継承可能である")
+    import java.io.IOException
+    trait UnhappyIOException extends IOException with LoggedException {
+      override def getMessage() = "arggh!"
+    }
+    
   }
   describe("sec 10.13: Self Types"){
+    describe("self type を使う"){
+      trait Logged {
+        def log(msg: String):Action[String] = new ConsoleAction[String] { val arg = msg }
+      }
+      trait LoggedException extends Logged { self : Exception =>
+        def log() { log(getMessage) }
+      }
+      class Program extends Exception with LoggedException
+      
+      val program = new Program
+    }
+    
     describe("補足: self type を使えば、循環参照が可能である"){
-      trait A {self: B=>}
-      trait B {self: A=>}
+      trait A {self: B=>
+        def b:B = new B with A
+      }
+      trait B {self: A=>
+        def a:A = new A with B
+      }
+      class C extends A with B {
+        
+      }
       /*
        * trait Model extends Evaluator
        * trait Evaluator extends Model
@@ -304,6 +421,21 @@ class Chapter10Spec extends FunSpec with ShouldMatchers with helpers {
       trait Model extends Evaluator
       trait Evaluator { self :Model =>
       }
+    }
+    describe("self type は構造型に対応している"){
+      trait Logged {
+        def log(msg: String):Action[String] = new ConsoleAction[String] { val arg = msg }
+      }
+      trait LoggedException extends Logged { self : { def getMessage() : String } =>
+        def log():Action[String] =  { log(getMessage) }
+      }
+      trait FakeException {
+        def getMessage() : String = "I am not an exception"
+      }
+      class Program extends FakeException with LoggedException
+      
+      val program = new Program
+      program.log().arg  should equal ("I am not an exception")
     }
   }
   describe("sec 10.14: What Happens under the Hood"){
