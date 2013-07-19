@@ -8,7 +8,6 @@ import org.scalatest.{ FunSpec, BeforeAndAfterAll, BeforeAndAfterEach }
 import scala_seminar._
 
 class Chapter11Spec extends FunSpec with ShouldMatchers with helpers {
-  // info("テストしやすいよう下準備しておく")
   describe("sec 11.1: Identifier"){
     it("識別子にはいろいろな記号が利用できる"){
       val !#%&*+-:/<=>?@\^|~ = """!#%&*+-:/<=>?@\^|~"""
@@ -69,7 +68,7 @@ class Chapter11Spec extends FunSpec with ShouldMatchers with helpers {
         new Fraction(2,1)
       }
     }
-    it("1項演算子を前置演算子として定義できる"){
+    it("いくつかの1項演算子は前置演算子として定義できる"){
       val a = new Fraction(1,2)
       (! a) should equal {
         new Fraction(2,1)
@@ -252,7 +251,7 @@ class Chapter11Spec extends FunSpec with ShouldMatchers with helpers {
     }
     it("抽出子が引数を持たない場合"){
       object IsCompound {
-        def unapply(input:String):Boolean = input.contains("")
+        def unapply(input:String):Boolean = input.contains(" ")
       }
       object Name {
         def unapply(input:String): Option[(String,String)] = {
