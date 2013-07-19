@@ -19,7 +19,7 @@ class Chapter11Spec extends FunSpec with ShouldMatchers with helpers {
     }
     it("バッククオート内にはどんな文字も利用できる"){
       class `class`
-      val `class` = new `class`
+      val `null` = new `class`
     }
   }
   describe("sec 11.2: Infix operators"){
@@ -89,17 +89,17 @@ class Chapter11Spec extends FunSpec with ShouldMatchers with helpers {
     info("演算子の優先順位は、定義された演算子の最初の文字で決まる")
   }
   describe("sec 11.6: Associativity"){
-    it("原則として left-associative である"){
+    it("原則として2項演算子は左結合である"){
       (17 - 2 - 9) should equal{
         (17 - 2) -9
       }
     }
-    it("例外的に :で終る演算子は right-associative となる"){
+    it("例外的に :で終る演算子は右結合となる"){
       (1 :: 2 :: Nil) should equal{
         1 :: (2 :: Nil)
       }
     }
-    it("right-associativeな二項演算子は、2番目の引数に属するメソッドである"){
+    it("左結合の二項演算子は、2番目の引数に属するメソッドである"){
       (2 :: Nil) should equal{
         Nil.::(2)
       }
@@ -119,8 +119,6 @@ class Chapter11Spec extends FunSpec with ShouldMatchers with helpers {
       val multitude: Int => Fraction = (mul) => {
         new Fraction(mul * denominator, mul * numerator)
       }
-      // val reciprocal = new Fraction(denominator, numerator)
-      // def unary_!() = reciprocal()
     }
     it("applyを使う"){
       val fraction = new Fraction(1,2)
@@ -165,7 +163,7 @@ class Chapter11Spec extends FunSpec with ShouldMatchers with helpers {
           new Fraction(numerator / common_devisor, denominator / common_devisor)
         }
       }
-      it("apply を使う"){
+      it("apply を使ってインスタンスを生成する"){
         (Fraction(3,4) * Fraction(2,5)) should equal {
           Fraction(3*2,4*5)
         }
@@ -195,7 +193,7 @@ class Chapter11Spec extends FunSpec with ShouldMatchers with helpers {
       }
       def apply(numerator:Int, denominator:Int) = new Fraction(numerator, denominator)
     }
-    it("パターンマッチでunapplyを使う"){
+    it("パターンマッチで抽出子を利用する"){
       Fraction(5,1) match {
         case Fraction(n,d) => {
           n should equal(5)
