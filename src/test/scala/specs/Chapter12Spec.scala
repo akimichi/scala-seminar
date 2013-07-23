@@ -127,7 +127,7 @@ class Chapter12Spec extends FunSpec with ShouldMatchers with helpers {
       fun(2) should equal(12)
     }
     it("closureが参照透明性 referential transparency を保持するケース"){
-      case class Closure(y:Int) {
+      case class Closure(val y:Int) {
         val fun:Int => Int = (x) => {
           x + y
         }
@@ -136,25 +136,28 @@ class Chapter12Spec extends FunSpec with ShouldMatchers with helpers {
       Closure(10).fun(2) should equal(12)
       Closure(1).fun(2) should equal(3)
     }
+    it("callbackの例"){
+      val x = 10
+      val caller: (Int => Int) => Int = {callback =>
+        callback(x)
+      }
+    }
     it("平方根の例"){
-      trait config {
+      trait squareRoot {
         val precision:Double
         val guess:Double
-      }
-      trait SquareRoot extends config {
+        
         def squareRootSimple(x : Double) : Double = squareRootIter(guess,x)
         def squareRootIter(guess:Double, x : Double) : Double = {
-          if (goodEnough(guess, x)) {
+          if (goodEnough(guess, x))
             guess
-          }
-          else {
+          else
             squareRootIter(improveGuess(guess, x), x)
-          }
         }
         
         private def improveGuess(guess:Double, x : Double) : Double = {
           val newguess = average(guess, x / guess)
-          println("guess for x " + x + " improved to = " + newguess)
+          // println("guess for x " + x + " improved to = " + newguess)
           newguess
         }
 
@@ -177,23 +180,20 @@ class Chapter12Spec extends FunSpec with ShouldMatchers with helpers {
             newguess
           }
           
-          def goodEnough(guess : Double) = {
+          def goodEnough(guess : Double):Boolean = {
             (square(guess) - x).abs  < precision
           }
-          squareRootIter(1.0, x)
+          squareRootIter(guess, x)
+          // squareRootIter(1.0, x)
         }
 
         private def average(x : Double, y : Double) : Double = {
           (x + y) / 2
         }
 
-        private def average(list : List[Double]) : Double = {
-          list.foldLeft(0.0)(_ + _) / list.size
-        }
+        private def average(list : List[Double]) : Double = list.foldLeft(0.0)(_ + _) / list.size
 
-        private def square(value : Double) : Double = {
-          value * value
-        }
+        private def square(value : Double) : Double = value * value
       }
     }
   }
@@ -208,6 +208,7 @@ class Chapter12Spec extends FunSpec with ShouldMatchers with helpers {
           else reduce(map(a), mapReduce(map, reduce, zero)(a+1,b))
         }
         def product(map:Int => Int)(a:Int, b:Int):Int = mapReduce(map, (x,y) => x*y, 1)(a,b)
+        def sum(map:Int => Int)(a:Int, b:Int):Int = mapReduce(map, (x,y) => x+y, 0)(a,b)
       }
       it("mapReduceを実行する") {
         import test._
