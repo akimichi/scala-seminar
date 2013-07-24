@@ -75,15 +75,35 @@ class Chapter12Spec extends FunSpec with ShouldMatchers with helpers {
         9
       }
       List(1,2,3,4,5,6,7,8,9).foldRight(List.empty[Int]){(i,accum) =>
-        val p:Int => Boolean = {x =>
+        val filterBy:Int => Boolean = {x =>
           x % 2  == 0
         }
-        if(p(i))
+        if(filterBy(i))
           i::accum
         else
           accum
       } should equal{
         List(2, 4, 6, 8) 
+      }
+      
+      val func:(Int => Boolean) => (Int,List[Int]) => List[Int] = {filterBy:(Int => Boolean) => {(i,accum) => 
+        if(filterBy(i))
+          i::accum
+        else
+          accum
+      }}
+      val evenFilter:(Int,List[Int]) => List[Int] = func{x:Int =>
+        x % 2 == 0
+      }
+      val oddFilter:(Int,List[Int]) => List[Int] = func{x:Int =>
+        x % 2 != 0
+      }
+
+      List(1,2,3,4,5,6,7,8,9).foldRight(List.empty[Int])(evenFilter) should equal{
+        List(2, 4, 6, 8) 
+      }
+      List(1,2,3,4,5,6,7,8,9).foldRight(List.empty[Int])(oddFilter) should equal{
+        List(1,3,5,7,9)
       }
     }
     
@@ -96,7 +116,10 @@ class Chapter12Spec extends FunSpec with ShouldMatchers with helpers {
             xs
         }
       }
-      filter(List(1,2,3,4,5)){_ % 2 != 0} should equal(List(1,3,5))
+      val odd:Int => Boolean = {x =>
+        x % 2  != 0
+      }
+      filter(List(1,2,3,4,5))(odd) should equal(List(1,3,5))
     }
     it("for表現を利用してfilterを定義する"){
       def filter[T](collection:Seq[T])(filterBy:(T) => Boolean):Seq[T] = {
@@ -178,7 +201,7 @@ class Chapter12Spec extends FunSpec with ShouldMatchers with helpers {
     }
   }
   describe("sec 12.7: SAM Conversions"){
-    
+    info("省略")
   }
   describe("sec 12.8: Currying"){
     describe("curry化を用いた mapReduce抽象(Couseraのコース 2.3の例)") {
@@ -208,18 +231,8 @@ class Chapter12Spec extends FunSpec with ShouldMatchers with helpers {
     trait ConsoleAction[T] extends Action[T] {
       def invoke:Unit = println(content)
     }
-    trait FileAction[T] extends Action[T] {
-      def filename:String
-      
-      def invoke:Unit = {
-        val out = new java.io.PrintStream(filename)
-        out.println(content)
-        out.flush
-      }
-    }
 
     def until[T](condition: => Boolean)(block: => Action[T])(results:List[Action[T]] = List.empty[Action[T]]):List[Action[T]] = {
-      
       if(!condition) {
         val result:Action[T] = block
         until(condition)(block)(result :: results)
@@ -234,7 +247,7 @@ class Chapter12Spec extends FunSpec with ShouldMatchers with helpers {
     
   }
   describe("sec 12.10: The return Expression"){
-    def until[T](condition: => Boolean)(block: => Unit) = {
+    def until[T](condition: => Boolean)(block: => Unit) : Unit = {
       if(!condition) {
         block
         until(condition)(block)
@@ -249,6 +262,7 @@ class Chapter12Spec extends FunSpec with ShouldMatchers with helpers {
       }
       return -1
     }
+    indexOf("012345789",'2') should equal(2)
   }
 }
     
