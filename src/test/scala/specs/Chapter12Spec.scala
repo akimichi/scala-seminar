@@ -146,55 +146,35 @@ class Chapter12Spec extends FunSpec with ShouldMatchers with helpers {
       trait squareRoot {
         val precision:Double
         val guess:Double
-        
-        def squareRootSimple(x : Double) : Double = squareRootIter(guess,x)
-        def squareRootIter(guess:Double, x : Double) : Double = {
+
+        /* guess が自由変数である */ 
+        val calc: Double => Double = {x =>
+          calcIterate(guess)(x)
+        }
+        /* precision が自由変数である */ 
+        val calcIterate: Double => Double => Double = {guess => {x =>
+          def average(x : Double, y : Double) : Double = (x + y) / 2
+          def square(value : Double) : Double = value * value
+          def improveGuess(guess:Double, x : Double) : Double = average(guess, x / guess)
+          def goodEnough(guess:Double, x : Double) = (square(guess) - x).abs  < precision
+          
           if (goodEnough(guess, x))
             guess
           else
-            squareRootIter(improveGuess(guess, x), x)
-        }
-        
-        private def improveGuess(guess:Double, x : Double) : Double = {
-          val newguess = average(guess, x / guess)
-          // println("guess for x " + x + " improved to = " + newguess)
-          newguess
-        }
-
-        private def goodEnough(guess:Double, x : Double) = {
-          (square(guess) - x).abs  < precision
-        }
-
-        def squareRoot(x : Double) : Double = {
-          def squareRootIter(guess:Double, x : Double) : Double = {
-            if (goodEnough(guess)) {
-              guess
-            }
-            else {
-              squareRootIter(improveGuess(guess), x)
-            }
-          }
-          def improveGuess(guess:Double) : Double = {
-            val newguess = average(List(guess, x / guess))
-            println("guess for x " + x + " improved to = " + newguess)
-            newguess
-          }
-          
-          def goodEnough(guess : Double):Boolean = {
-            (square(guess) - x).abs  < precision
-          }
-          squareRootIter(guess, x)
-          // squareRootIter(1.0, x)
-        }
-
-        private def average(x : Double, y : Double) : Double = {
-          (x + y) / 2
-        }
-
-        private def average(list : List[Double]) : Double = list.foldLeft(0.0)(_ + _) / list.size
-
-        private def square(value : Double) : Double = value * value
+            calcIterate(improveGuess(guess, x))(x)
+        }}
       }
+      val sqrt = new squareRoot {
+        val guess = 1.0
+        val precision = 0.01
+      }
+      sqrt.calc(2.0) should equal(1.4166666666666665)
+      
+      val sqrt_precise = new squareRoot {
+        val guess = 1.0
+        val precision = 0.000000001
+      }
+      sqrt_precise.calc(2.0) should equal(1.4142135623746899)
     }
   }
   describe("sec 12.7: SAM Conversions"){
@@ -217,10 +197,58 @@ class Chapter12Spec extends FunSpec with ShouldMatchers with helpers {
     }
   }
   describe("sec 12.9: Control Abstractions"){
+    trait Action[+T] {
+      def content:T
+      def invoke:Unit
+    }
+    object EmptyAction extends Action[Nothing] {
+      def content:Nothing = throw new Exception("should not be called")
+      def invoke:Unit = { /* do nothing */}
+    }
+    trait ConsoleAction[T] extends Action[T] {
+      def invoke:Unit = println(content)
+    }
+    trait FileAction[T] extends Action[T] {
+      def filename:String
+      
+      def invoke:Unit = {
+        val out = new java.io.PrintStream(filename)
+        out.println(content)
+        out.flush
+      }
+    }
+
+    def until[T](condition: => Boolean)(block: => Action[T])(results:List[Action[T]] = List.empty[Action[T]]):List[Action[T]] = {
+      
+      if(!condition) {
+        val result:Action[T] = block
+        until(condition)(block)(result :: results)
+      } else
+        results
+    }
+    var x = 10
+    until(x == 0) {
+      x -= 1
+      new ConsoleAction[Int] { val content = x }
+    }(List.empty[Action[Int]]).length should equal(10)
     
   }
   describe("sec 12.10: The return Expression"){
-    
+    def until[T](condition: => Boolean)(block: => Unit) = {
+      if(!condition) {
+        block
+        until(condition)(block)
+      }
+    }
+    def indexOf(str:String,ch:Char) : Int = {
+      var i = 0
+      until(i == str.length) {
+        if(str(i) == ch)
+          return i
+        i += 1
+      }
+      return -1
+    }
   }
 }
     
