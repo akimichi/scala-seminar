@@ -71,7 +71,7 @@ class Chapter12Spec extends FunSpec with ShouldMatchers with helpers {
       (1 to 9).foldRight(1)(_ * _)should equal{
         362880
       }
-      "123456789".foldRight(0){(_,n) => 1 + n} should equal{
+      "abcdefghi".foldRight(0){(_,n) => 1 + n} should equal{
         9
       }
       List(1,2,3,4,5,6,7,8,9).foldRight(List.empty[Int]){(i,accum) =>
@@ -121,7 +121,7 @@ class Chapter12Spec extends FunSpec with ShouldMatchers with helpers {
       }
       filter(List(1,2,3,4,5))(odd) should equal(List(1,3,5))
     }
-    it("for表現を利用してfilterを定義する"){
+    it("for構文を利用してfilterを定義する"){
       def filter[T](collection:Seq[T])(filterBy:(T) => Boolean):Seq[T] = {
         for {
           elem:T <- collection
@@ -140,6 +140,7 @@ class Chapter12Spec extends FunSpec with ShouldMatchers with helpers {
     }
   }
   describe("sec 12.6: Closures"){
+    info("closureとは、自由変数を含んだ関数をいう")
     it("closureが参照透明性 referential transparency を破壊するケース"){
       var outer = 1
       val fun = (x:Int) => {
@@ -159,12 +160,12 @@ class Chapter12Spec extends FunSpec with ShouldMatchers with helpers {
       Closure(10).fun(2) should equal(12)
       Closure(1).fun(2) should equal(3)
     }
-    it("callbackの例"){
-      val x = 10
-      val caller: (Int => Int) => Int = {callback =>
-        callback(x)
-      }
-    }
+    // it("callbackの例"){
+    //   val x = 10
+    //   val caller: (Int => Int) => Int = {callback =>
+    //     callback(x)
+    //   }
+    // }
     it("平方根の例"){
       trait squareRoot {
         val precision:Double
@@ -203,51 +204,47 @@ class Chapter12Spec extends FunSpec with ShouldMatchers with helpers {
   describe("sec 12.7: SAM Conversions"){
       
     it("SAMを使った例"){
-      case class Event(name:String)
-      
-      trait Listener {
-        def action(event:Event):Unit
-      }
-      
-      case class Button(name:String) {
-        var listeners:Seq[Listener] = List.empty[Listener]
+      object widgets {
+        case class Event(name:String)
         
-        def addListener(listener:Listener):Seq[Listener] = {
-          listeners = listener +: listeners
-          listeners
+        trait Listener {
+          def action(event:Event):Unit
         }
-        def receive(event:Event) {
-          listeners.foreach{ listener:Listener =>
-            listener.action(event)
+        
+        case class Button(name:String) {
+          var listeners:Seq[Listener] = List.empty[Listener]
+          
+          def addListener(listener:Listener):Seq[Listener] = {
+            listeners = listener +: listeners
+            listeners
+          }
+          def receive(event:Event) {
+            listeners.foreach{ listener:Listener =>
+              listener.action(event)
+            }
           }
         }
       }
-      // class Client(var counter:Int = 0) extends widgets {
-      class Client(var counter:Int = 0)  {
-        var buttons:Seq[Button] = Seq.empty[Button]
-        /*
-         val button = Button("sample")
-         button.addListener(new Listener {
-         def action(event:Event):Unit = {
-         counter += 1
-         }
-         })
-         */
+      class Client(var counter:Int = 0) {
+        import widgets._
+        val button = Button("sample")
+        button.addListener(new Listener {
+          def action(event:Event):Unit = {
+            counter += 1
+          }
+        })
         def addButton(button:Button):Unit = {
           button.addListener(new Listener {
             def action(event:Event):Unit = {
               counter = counter + 1
             }
           })
-          buttons = button +: buttons
         }
         def receive(event:Event):Unit = {
-          buttons.foreach{ button:Button =>
-            button.receive(event)
-          }
-          // button.receive(event)
+          button.receive(event)
         }
       }
+      import widgets._
       val client = new Client()
       client.counter should equal(0)
       val button = Button("sample")
@@ -255,31 +252,38 @@ class Chapter12Spec extends FunSpec with ShouldMatchers with helpers {
       val event = Event("an event")
       client.receive(event)
       client.counter should equal(1)
-
     }
-    it("implicit で改善する"){
-      case class Event(name:String)
-      
-      trait Listener {
-        def action(event:Event):Unit
-      }
-      
-      case class Button(name:String) {
-        var listeners:Seq[Listener] = List.empty[Listener]
+    it("implicit method で改善する"){
+      object widgets {
+        case class Event(name:String)
         
-        def addListener(listener:Listener):Seq[Listener] = {
-          listeners = listener +: listeners
-          listeners
+        trait Listener {
+          def action(event:Event):Unit
         }
-        def receive(event:Event) {
-          listeners.foreach{ listener:Listener =>
-            listener.action(event)
+        
+        case class Button(name:String) {
+          var listeners:Seq[Listener] = List.empty[Listener]
+          
+          def addListener(listener:Listener):Seq[Listener] = {
+            listeners = listener +: listeners
+            listeners
+          }
+          def receive(event:Event) {
+            listeners.foreach{ listener:Listener =>
+              listener.action(event)
+            }
           }
         }
       }
       
       class Client(var counter:Int = 0)  {
+        import widgets._
         var buttons:Seq[Button] = Seq.empty[Button]
+        implicit def makeAction(func:(Event) => Unit) : Listener = {
+          new Listener {
+            def action(event:Event):Unit = func(event)
+          }
+        }
         def addButton(button:Button):Unit = {
           button.addListener{event:Event =>
             counter = counter + 10
@@ -291,14 +295,8 @@ class Chapter12Spec extends FunSpec with ShouldMatchers with helpers {
             button.receive(event)
           }
         }
-        implicit def makeAction(func:(Event) => Unit) : Listener = {
-          new Listener {
-            def action(event:Event):Unit = {
-              func(event)
-            }
-          }
-        }
       }
+      import widgets._
       val client = new Client()
       client.counter should equal(0)
       val button = Button("sample")
@@ -310,21 +308,76 @@ class Chapter12Spec extends FunSpec with ShouldMatchers with helpers {
   }
   describe("sec 12.8: Currying"){
     describe("curry化を用いた mapReduce抽象(Couseraのコース 2.3の例)") {
-      object test {
-        def mapReduce(map: Int => Int, reduce:(Int,Int) => Int, zero:Int)(a:Int,b:Int): Int = {
-          if(a > b) zero
-          else reduce(map(a), mapReduce(map, reduce, zero)(a+1,b))
+      it("mapReduceで整数の集約を実行する") {
+        object test {
+          def mapReduce(map: Int => Int, reduce:(Int,Int) => Int, zero:Int)(from:Int,to:Int): Int = {
+            if(from > to)
+              zero
+            else
+              reduce(map(from), mapReduce(map, reduce, zero)(from+1,to))
+          }
+          def product(a:Int, b:Int):Int = mapReduce(x => x, (x,y) => x*y, 1)(a,b)
+          def sum(a:Int, b:Int):Int = mapReduce(x => x, (x,y) => x+y, 0)(a,b)
         }
-        def product(map:Int => Int)(a:Int, b:Int):Int = mapReduce(map, (x,y) => x*y, 1)(a,b)
-        def sum(map:Int => Int)(a:Int, b:Int):Int = mapReduce(map, (x,y) => x+y, 0)(a,b)
-      }
-      it("mapReduceを実行する") {
         import test._
-        product(x => x*x)(3,4) should equal(144)
+        mapReduce(x => x,(x,y) => x+y,0)(0,9) should equal{
+          0 + 1 + 2 + 3 + 4 + 5 + 6 + 7 + 8 + 9
+        }
+        mapReduce(x => x,(x,y) => x+y,0)(0,9) should equal{
+          sum(0,9)
+        }
+        mapReduce(x => x,(x,y) => x*y,1)(1,10) should equal{
+          1 * 2 * 3 * 4 * 5 * 6 * 7 * 8 * 9 * 10
+        }
+        mapReduce(x => x,(x,y) => x*y,1)(1,10) should equal{
+          product(1,10)
+        }
+      }
+      it("mapReduceで文字列処理を実行する") {
+        object test {
+          def mapReduce[T,U](map: Char => U)(reduce:(U,T) => T)(zero:T)(str:String): T = {
+            if(str.isEmpty)
+              zero
+            else {
+              val char = str.charAt(0)
+              reduce(map(char), mapReduce(map)(reduce)(zero)(str drop 1))
+            }
+          }
+        }
+        import test._
+        mapReduce[Int,Char]{x => x}{(char,t) => (char.toInt - 48) + t}(0)("0123456789") should equal{
+          0 + 1 + 2 + 3 + 4 + 5 + 6 + 7 + 8 + 9
+        }
+        mapReduce[Int,Int]{x => Integer.parseInt(x.toString)}{(integer,t) => integer + t}(0)("0123456789") should equal{
+          0 + 1 + 2 + 3 + 4 + 5 + 6 + 7 + 8 + 9
+        }
+        mapReduce[Int,Char]{x => x}{(char,t) => if(char == ' ') t+1 else t}(0)("abc defg hij klm") should equal{
+          3
+        }
+        mapReduce[String,Char]{x => (x+1).toChar}{(char,str) => char + str}("")("abc defg hij klm") should equal{
+          "bcd!efgh!ijk!lmn"
+        }
       }
     }
   }
   describe("sec 12.9: Control Abstractions"){
+    def until[T](condition: => Boolean)(block: => Unit):Unit = {
+      if(!condition) {
+        block
+        until(condition)(block)
+      }
+    }
+    it("untilを使う"){
+      var index = 10
+      var times = 0
+      until(index == 0) {
+        index -= 1
+        times += 1
+      }
+      index should equal(0)
+      times should equal(10)
+    }
+    /*
     trait Action[+T] {
       def content:T
       def invoke:Unit
@@ -349,7 +402,7 @@ class Chapter12Spec extends FunSpec with ShouldMatchers with helpers {
       x -= 1
       new ConsoleAction[Int] { val content = x }
     }(List.empty[Action[Int]]).length should equal(10)
-    
+    */
   }
   describe("sec 12.10: The return Expression"){
     def until[T](condition: => Boolean)(block: => Unit) : Unit = {
