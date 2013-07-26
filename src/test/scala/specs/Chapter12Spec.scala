@@ -9,19 +9,22 @@ import scala_seminar._
 
 class Chapter12Spec extends FunSpec with ShouldMatchers with helpers {
   describe("sec 12.1: Functions as Values"){
-    import scala.math._
+    info("関数型言語では、関数も値として扱かわれる")
     val num = 3.14
-    val fun: Double => Double = ceil _
+    info("メソッドに _ を付けると関数となる")
+    val fun: Double => Double = scala.math.ceil _
     fun(num) should equal(4.0)
-    Seq(3.14,1.42,2.0).map(fun) should equal{
+    List(3.14,1.42,2.0).map(fun) should equal{
       List(4.0, 2.0, 2.0)
     }
   }
   describe("sec 12.2: Anonymous Functions"){
+    info("関数に名前を付ける場合")
     val triple = (x:Double) => 3 * x
     Seq(3.14,1.42,2.0).map(triple) should equal{
       List(9.42, 4.26, 6.0)
     }
+    info("一度しか使われない関数は無名関数として定義することが多い")
     Seq(3.14,1.42,2.0).map{(x:Double) => 3 * x} should equal{
       List(9.42, 4.26, 6.0)
     }
@@ -31,7 +34,7 @@ class Chapter12Spec extends FunSpec with ShouldMatchers with helpers {
     import scala.math._
 
     it("関数を引数にとるメソッド"){
-      def valueAtOneQuarter(f:Double => Double) = f(0.25)
+      def valueAtOneQuarter(func:Double => Double) = func(0.25)
       valueAtOneQuarter(ceil _) should equal(1.0)
       valueAtOneQuarter(sqrt _) should equal(0.5)
     }
@@ -42,7 +45,7 @@ class Chapter12Spec extends FunSpec with ShouldMatchers with helpers {
     }
   }
   describe("sec 12.4: Parameter Inference"){
-    def valueAtOneQuarter(f:Double => Double) = f(0.25)
+    def valueAtOneQuarter(func:Double => Double) = func(0.25)
     valueAtOneQuarter{x:Double => 3 * x} should equal(0.75)
     valueAtOneQuarter{x => 3 * x} should equal(0.75)
     valueAtOneQuarter{3 * _} should equal(0.75)
@@ -52,6 +55,10 @@ class Chapter12Spec extends FunSpec with ShouldMatchers with helpers {
       fun(3) should equal{9}
       val fun2 = 3 * (_:Double)
       fun2(3) should equal{9}
+      val fun3 = {i:Double =>
+        3 * i
+      }
+      fun3(3) should equal{9}
     }
   }
   describe("sec 12.5: Useful Higher-Order Functions"){
@@ -65,10 +72,10 @@ class Chapter12Spec extends FunSpec with ShouldMatchers with helpers {
       (1 to 9).reduceLeft{_ * _} should equal{
         362880
       }
-      (1 to 9).foldRight(0)(_ + _)should equal{
+      (1 to 9).foldRight(0){_ + _} should equal{
         45
       }
-      (1 to 9).foldRight(1)(_ * _)should equal{
+      (1 to 9).foldRight(1){_ * _} should equal{
         362880
       }
       "abcdefghi".foldRight(0){(_,n) => 1 + n} should equal{
@@ -227,21 +234,19 @@ class Chapter12Spec extends FunSpec with ShouldMatchers with helpers {
       }
       class Client(var counter:Int = 0) {
         import widgets._
-        val button = Button("sample")
-        button.addListener(new Listener {
-          def action(event:Event):Unit = {
-            counter += 1
-          }
-        })
+        var buttons:Seq[Button] = Seq.empty[Button]
         def addButton(button:Button):Unit = {
           button.addListener(new Listener {
             def action(event:Event):Unit = {
-              counter = counter + 1
+              counter += 1
             }
           })
+          buttons = button +: buttons
         }
         def receive(event:Event):Unit = {
-          button.receive(event)
+          buttons.foreach{ button:Button =>
+            button.receive(event)
+          }
         }
       }
       import widgets._
@@ -377,32 +382,6 @@ class Chapter12Spec extends FunSpec with ShouldMatchers with helpers {
       index should equal(0)
       times should equal(10)
     }
-    /*
-    trait Action[+T] {
-      def content:T
-      def invoke:Unit
-    }
-    object EmptyAction extends Action[Nothing] {
-      def content:Nothing = throw new Exception("should not be called")
-      def invoke:Unit = { /* do nothing */}
-    }
-    trait ConsoleAction[T] extends Action[T] {
-      def invoke:Unit = println(content)
-    }
-
-    def until[T](condition: => Boolean)(block: => Action[T])(results:List[Action[T]] = List.empty[Action[T]]):List[Action[T]] = {
-      if(!condition) {
-        val result:Action[T] = block
-        until(condition)(block)(result :: results)
-      } else
-        results
-    }
-    var x = 10
-    until(x == 0) {
-      x -= 1
-      new ConsoleAction[Int] { val content = x }
-    }(List.empty[Action[Int]]).length should equal(10)
-    */
   }
   describe("sec 12.10: The return Expression"){
     def until[T](condition: => Boolean)(block: => Unit) : Unit = {
