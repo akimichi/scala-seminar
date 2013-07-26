@@ -201,7 +201,112 @@ class Chapter12Spec extends FunSpec with ShouldMatchers with helpers {
     }
   }
   describe("sec 12.7: SAM Conversions"){
-    info("省略")
+      
+    it("SAMを使った例"){
+      case class Event(name:String)
+      
+      trait Listener {
+        def action(event:Event):Unit
+      }
+      
+      case class Button(name:String) {
+        var listeners:Seq[Listener] = List.empty[Listener]
+        
+        def addListener(listener:Listener):Seq[Listener] = {
+          listeners = listener +: listeners
+          listeners
+        }
+        def receive(event:Event) {
+          listeners.foreach{ listener:Listener =>
+            listener.action(event)
+          }
+        }
+      }
+      // class Client(var counter:Int = 0) extends widgets {
+      class Client(var counter:Int = 0)  {
+        var buttons:Seq[Button] = Seq.empty[Button]
+        /*
+         val button = Button("sample")
+         button.addListener(new Listener {
+         def action(event:Event):Unit = {
+         counter += 1
+         }
+         })
+         */
+        def addButton(button:Button):Unit = {
+          button.addListener(new Listener {
+            def action(event:Event):Unit = {
+              counter = counter + 1
+            }
+          })
+          buttons = button +: buttons
+        }
+        def receive(event:Event):Unit = {
+          buttons.foreach{ button:Button =>
+            button.receive(event)
+          }
+          // button.receive(event)
+        }
+      }
+      val client = new Client()
+      client.counter should equal(0)
+      val button = Button("sample")
+      client.addButton(button)
+      val event = Event("an event")
+      client.receive(event)
+      client.counter should equal(1)
+
+    }
+    it("implicit で改善する"){
+      case class Event(name:String)
+      
+      trait Listener {
+        def action(event:Event):Unit
+      }
+      
+      case class Button(name:String) {
+        var listeners:Seq[Listener] = List.empty[Listener]
+        
+        def addListener(listener:Listener):Seq[Listener] = {
+          listeners = listener +: listeners
+          listeners
+        }
+        def receive(event:Event) {
+          listeners.foreach{ listener:Listener =>
+            listener.action(event)
+          }
+        }
+      }
+      
+      class Client(var counter:Int = 0)  {
+        var buttons:Seq[Button] = Seq.empty[Button]
+        def addButton(button:Button):Unit = {
+          button.addListener{event:Event =>
+            counter = counter + 10
+          }
+          buttons = button +: buttons
+        }
+        def receive(event:Event):Unit = {
+          buttons.foreach{ button:Button =>
+            button.receive(event)
+          }
+        }
+        implicit def makeAction(func:(Event) => Unit) : Listener = {
+          new Listener {
+            def action(event:Event):Unit = {
+              func(event)
+            }
+          }
+        }
+      }
+      val client = new Client()
+      client.counter should equal(0)
+      val button = Button("sample")
+      client.addButton(button)
+      val event = Event("an event")
+      client.receive(event)
+      client.counter should equal(10)
+    }
   }
   describe("sec 12.8: Currying"){
     describe("curry化を用いた mapReduce抽象(Couseraのコース 2.3の例)") {
