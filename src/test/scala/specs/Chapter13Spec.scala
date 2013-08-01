@@ -8,23 +8,28 @@ import scala_seminar._
 
 class Chapter13Spec extends FunSpec with ShouldMatchers with helpers {
 
-  /*
-   *
-   *
-   *
-   *
-   *
-   */
-
+  info("http://docs.scala-lang.org/overviews/collections/overview.html")
   describe("sec 13.1: The Main Collections Traits"){
-    it("companion object の apply でインスタンスを生成できる"){
+    it("コレクション型は、それぞれの companion object の apply でインスタンスを生成できる"){
+      Iterable(0xFF,0xFF00,0xFF0000) should be {
+        anInstanceOf[Iterable[Int]]
+      }
+      import java.awt.Color
+      Set(Color.RED, Color.GREEN, Color.BLUE)  should be {
+        anInstanceOf[Set[AnyRef]]
+      }
+      info("Uniform Creation Principleを呼ぶ")
     }
   }
   describe("sec 13.2: Mutable and Immmutable Collections"){
-
     it("明示しなれば、デフォルトでは immutable なコレクションとなる"){
       scala.collection.Map("Hello" -> 42) should be {
         anInstanceOf[scala.collection.immutable.Map[String,Int]]
+      }
+    }
+    it("scala,Predefはデフォルトでインポートされている"){
+      List(1,2,3) should be {
+        anInstanceOf[scala.collection.immutable.List[Int]]
       }
     }
     it("immutable なコレクションへの操作"){
@@ -40,19 +45,35 @@ class Chapter13Spec extends FunSpec with ShouldMatchers with helpers {
 
   }
   describe("sec 13.3: Sequences"){
+    it("Iterable"){
+      val iterable:Iterable[Int] = Iterable(1,2,3)
+      iterable.takeRight(1) should equal(List(3))
+      iterable.dropRight(2) should equal(List(1))
+      iterable.reduceLeft{(accum,item) => accum + item} should equal(6)
+    }
     it("Vector"){
     }
     it("Range"){
+      val rangeTo = 1 to 9
+      rangeTo should equal{
+         Range(1, 10)
+      }
+      val rangeUntil = 1 until 10
+      rangeUntil should equal{
+         Range(1, 10)
+      }
     }
   }
   describe("sec 13.4: Lists"){
-    val digits = List(4,2)
-
-    def sum(lst:List[Int]) : Int = lst match {
-      case Nil => 0
-      case h :: t => h + sum(t)
+    it("sumを計算する"){
+      val digits = List(4,2)
+      def sum(lst:List[Int]) : Int = lst match {
+        case Nil => 0
+        case h :: t => h + sum(t)
+      }
+      sum(List(9,4,2)) should equal(15)
+      List(9,4,2).sum should equal(15)
     }
-    List(9,4,2).sum should equal(15)
   }
   describe("sec 13.5: Mutable Lists"){
 
@@ -66,6 +87,11 @@ class Chapter13Spec extends FunSpec with ShouldMatchers with helpers {
 
     }
     it("bit set"){
+      info("ビット集合 (BitSet) は大きい整数のビットを小さな整数のコレクションを使って表す。")
+      val bits = scala.collection.immutable.BitSet.empty
+      val newBits = bits + 3 + 4 + 4
+      newBits(3) should equal(true)
+      newBits(5) should equal(false)
     }
   }
   describe("sec 13.7: Operators for Adding or Removing Elements"){
