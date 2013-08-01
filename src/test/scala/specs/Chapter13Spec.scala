@@ -3,17 +3,26 @@ import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.FunSuite
 import org.scalatest.matchers.ShouldMatchers
-import org.scalatest.{ FunSpec, BeforeAndAfterAll, BeforeAndAfterEach }
-
+import org.scalatest.FunSpec
 import scala_seminar._
 
 class Chapter13Spec extends FunSpec with ShouldMatchers with helpers {
+
+  /*
+   *
+   *
+   *
+   *
+   *
+   */
+
   describe("sec 13.1: The Main Collections Traits"){
     it("companion object の apply でインスタンスを生成できる"){
     }
   }
   describe("sec 13.2: Mutable and Immmutable Collections"){
-    it("デフォルトでは immutable なコレクションとなる"){
+
+    it("明示しなれば、デフォルトでは immutable なコレクションとなる"){
       scala.collection.Map("Hello" -> 42) should be {
         anInstanceOf[scala.collection.immutable.Map[String,Int]]
       }
@@ -28,7 +37,7 @@ class Chapter13Spec extends FunSpec with ShouldMatchers with helpers {
         else digits(n / 10) + (n % 10)
       }
     }
-    
+
   }
   describe("sec 13.3: Sequences"){
     it("Vector"){
@@ -46,7 +55,7 @@ class Chapter13Spec extends FunSpec with ShouldMatchers with helpers {
     List(9,4,2).sum should equal(15)
   }
   describe("sec 13.5: Mutable Lists"){
-    
+
   }
   describe("sec 13.6: Sets"){
     (Set(2,0,1) + 1) should equal{
@@ -54,7 +63,7 @@ class Chapter13Spec extends FunSpec with ShouldMatchers with helpers {
     }
     it("linked hash set"){
       val weekdays = scala.collection.mutable.LinkedHashSet("Mo","Tu","We","Th","Fr")
-      
+
     }
     it("bit set"){
     }
@@ -82,10 +91,10 @@ class Chapter13Spec extends FunSpec with ShouldMatchers with helpers {
         }
       }
     }
-    
+
   }
   describe("sec 13.8: Common Methods"){
-    
+
   }
   describe("sec 13.9: Mapping a Function"){
     it("mapを使う"){
@@ -116,12 +125,12 @@ class Chapter13Spec extends FunSpec with ShouldMatchers with helpers {
       } should equal {
         Vector(-1,1)
       }
-      
+
     }
   }
   describe("sec 13.10: Reducing,Folding and Scanning"){
-    
+
   }
-  
+
 }
-    
+
