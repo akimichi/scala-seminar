@@ -1,7 +1,15 @@
 package scala_seminar
 
+
+
 trait helpers {
   import org.scalatest.matchers._
+  
+  def time[T](f: => T): T = {
+    import System.{currentTimeMillis => now}
+    val start = now
+    try { f } finally { println("Elapsed: " + (now - start)/1000.0 + " s") }
+  }
   
   def anInstanceOf[T](implicit manifest: Manifest[T]) = { 
     val clazz = manifest.erasure.asInstanceOf[Class[T]] 
