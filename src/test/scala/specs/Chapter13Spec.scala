@@ -315,7 +315,55 @@ class Chapter13Spec extends FunSpec with ShouldMatchers with helpers {
     }
   }
   describe("sec 13.10: Reducing,Folding and Scanning"){
-    info("次回に持ち越し")
+    info("このセクションでは、二項演算を用いた反復処理を扱かう")
+    it("reduceLeft,reduceRight") {
+      List(1,7,2,9).reduceLeft{(current,subsequent) => current - subsequent} should equal {
+        -17 // ((1 - 7) - 2) - 9
+      }
+      List(1,7,2,9).reduceRight{(current,subsequent) => current - subsequent} should equal {
+        -13 // 1 - (7 - (2 - 9)
+      }
+      List(1,7,2,9).reduceRight{(current,subsequent) => current + subsequent} should equal {
+        List(1,7,2,9).reduceLeft{(current,subsequent) => current + subsequent}
+      }
+    }
+    it("foldLeft") {
+      List(1,7,2,9).foldLeft(0){(current,subsequent) => current - subsequent} should equal {
+        -19 // (((0 - 1) - 7) - 2) - 9
+      }
+    }
+    describe("foldRight") {
+      List(1,7,2,9).foldRight(0){(current,subsequent) => current - subsequent} should equal {
+        -13 // (0 - (1 - (7 - (2 - 9))))
+      }
+      (1 :: 2 :: 3 :: List.empty[Int]).foldRight(List.empty[Int]){(head,tail) => head :: tail} should equal {
+        List(1,2,3)
+      }
+    }
+    it("scanRight") {
+    }
+    it("scanLeft") {
+    }
+  }
+  describe("sec 13.11: Zipping"){
+    it("zip"){
+    }
+    it("zipAll"){
+    }
+    it("zipWithIndex"){
+    }
+  }
+  describe("sec 13.12: Iterators"){
+  }
+  describe("sec 13.13: Streams"){
+  }
+  describe("sec 13.14: Lazy Views"){
+  }
+  describe("sec 13.15: Interoperability with Java Collections"){
+  }
+  describe("sec 13.16: Threadsafe Collections"){
+  }
+  describe("sec 13.17: Parallel Collections"){
   }
 
 }
